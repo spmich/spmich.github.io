@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
-
+<head>
+    <title>Learn D3 in 5 minutes</title>
+</head>
+<body>
     <p>"Hello World" </p>
     <p> heeej </p>
 
+    <h3>Today is a beautiful day!!</h3>
 
 
-
-    <script src="https://d3js.org/d3.v5.min.js">
-
-        var paragraphs = document.getElementsByTagName("p");
-        for (var i = 0; i < paragraphs.length; i++) {
-            var paragraph = paragraphs.item(i);
-            paragraph.style.setProperty("color", "blue", null);
-        }
-
-
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script>
+        d3.select('h3').style('color', 'darkblue');    
+        d3.select('h3').style('font-size', '24px');
+    
     </script>
+    </body>
 </html>
 
