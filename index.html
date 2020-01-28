@@ -23,6 +23,16 @@
         .enter()        
         .append('li')        
         .text(function(d) { return d; });
+
+        //Select SVG element
+        var svg = d3.select('svg');
+        //Create rectangle element inside SVG
+        svg.append('rect')   
+        .attr('x', 50)   
+        .attr('y', 50)   
+        .attr('width', 200)   
+        .attr('height', 100)   
+        .attr('fill', 'green');
     
     </script>
     </body>
