@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Prototype 4</title>
+</head>
+<body>
+
+    <h1>Prototype 4</h1>
+    <p>Test - Parkinson - 3 datasets in one graph + flip axis + grid + text</p>
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+
+    <!-- Create a div where the graph will take place -->
+    <div id="my_dataviz"></div>
+
+
+<script>
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 70, right: 50, bottom: 50, left: 50},
+    width = 800 - margin.left - margin.right,
+    height = 1200 - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+         .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    // Labels of row and columns - for the axis
+    var myGroups = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+    var myVars = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"]
+
+    // Build X scales and axis:
+    var x = d3.scaleBand()
+        .range([ 0, width ])
+        .domain(myGroups)
+        .padding(0.01);
+    svg.append("g")
+        .call(d3.axisTop(x)) //makes the x-axis be at the top
+        //.attr("transform", "translate(0," + height + ")") // makes the x-axis be at the bottom
+        //.call(d3.axisBottom(x)) // makes the x-axis be at the bottom
+
+    // Build X scales and axis:
+    var y = d3.scaleBand()
+        .range([ 0, height ])
+        .domain(myVars)
+        .padding(0.01);
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // the colors
+    badColor = "#B22222"        // red
+    goodColor = "#32CD32"       // green
+    medicinColor = "#808080"    // grey
+
+    // Build color scale - red
+    var myColor = d3.scaleLinear()
+        .range(["white", badColor])
+        .domain([0,1])
+
+    // Build color scale - green
+    var myColor2 = d3.scaleLinear()
+        .range(["white", goodColor])
+        .domain([0,1])
+
+    // Build color scale - grey
+    var myColor3 = d3.scaleLinear()
+        .range(["white", medicinColor])
+        .domain([0,1])
+
+    // The grids
+    const xAxisGrid = d3.axisTop(x)
+        .tickSize(height)
+        .tickFormat('')
+        .ticks(24);
+    const yAxisGrid = d3.axisLeft(y)
+        .tickSize(-width)
+        .tickFormat('')
+        .ticks(60);
+
+    // Load three dataset
+    d3.queue()
+        .defer(d3.csv, "/data/data_bad_press1.csv")
+        .defer(d3.csv, "/data/data_good_press2.csv")
+        .defer(d3.csv, "/data/data_med_press3.csv")
+        .await(makeChart)
+        
+    // make the viz by using the data
+    function makeChart(error, data1, data2, data3){
+        if(error){
+            console.error("Oh dear, something went wrong: " + error);
+        }
+        else {
+            console.log(data1);
+            console.log(data2);
+            console.log(data3);
+
+            //dataset 1 - bad press1
+            svg.selectAll()
+                .data(data1, function(d1){ return d1.hour+':'+d1.minute;})
+                .enter()
+                .append("rect")
+                .attr("x", function(d1) { return x(d1.hour) })
+                .attr("y", function(d1) { return y(d1.minute) })         
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", function(d1) { return myColor(d1.value)} )
+
+            //dataset 2 - good press2
+            svg.selectAll()
+                .data(data2, function(d2){ return d2.hour+':'+d2.minute;})
+                .enter()
+                .append("rect")
+                .attr("x", function(d2) { return x(d2.hour) })
+                .attr("y", function(d2) { return y(d2.minute) })
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", function(d2) {           
+                     if (d2.value > 0) {return myColor2(d2.value)}
+                     else { return "white" }
+                    }) 
+            
+            //dataset 3 - medicin press3
+            svg.selectAll()
+                .data(data3, function(d3){ return d3.hour+':'+d3.minute;})
+                .enter()
+                .append("rect")
+                .attr("x", function(d3) { return x(d3.hour) })
+                .attr("y", function(d3) { return y(d3.minute) })
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", function(d3) { return myColor3(d3.value)} )
+
+            // TEXT X-Axis
+            svg.append("g")
+                .attr("class", "x axis")
+                .call(x)
+                .append("text")
+                .attr("x", (width/2)-30)
+                .attr("y", -30)
+                .style("text-anchor", "middel")
+                .style("font-weight", "bold")
+                .style("font-size", "20")
+                .text("Hours");
+
+            // TEXT Y-Axis    
+            svg.append("g")
+                .attr("class", "y axis")
+                .call(y)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -30)
+                .attr("x", -height/2)
+                .style("text-anchor", "middel")
+                .style("font-weight", "bold")
+                .style("font-size", "20")
+                .text("Minutes");
+                
+            // Create grids.
+            svg.append('g')
+                .attr('class', 'x axis-grid')
+                .attr('transform', 'translate(0,' + height + ')')
+                .call(xAxisGrid);
+            svg.append('g')
+                .attr('class', 'y axis-grid')
+                .call(yAxisGrid);
+
+            // Append Date text
+            svg.append('text')
+                .attr("x", (width/2)-60)
+                .attr("y", -50)
+                .attr("font-family", "sans-serif")
+                .style("text-anchor", "start")
+                .style("font-weight", "bold")
+                .style("font-size", "20")
+                .text("4. FEB 2020")
+            
+            // colorscale - red / bad
+            svg.selectAll()
+                .data(badColor)
+                .enter()
+                .append("rect")
+                .attr("x", -20)
+                .attr("y", -50)
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", badColor)
+            svg.append('text')
+                .attr("font-family", "sans-serif")
+                .style("font-size", "10")
+                .text("Bad")
+                .attr("x", -20)
+                .attr("y", -55)
+
+            // colorscale - green / good
+            svg.selectAll()
+                .data(goodColor)
+                .enter()
+                .append("rect")
+                .attr("x", 20)
+                .attr("y", -50)
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", goodColor)
+            svg.append('text')
+                .text("Good")
+                .attr("font-family", "sans-serif")
+                .style("font-size", "10")
+                .attr("x", 20)
+                .attr("y", -55)
+            
+            // colorscale - grey / medicin
+            svg.selectAll()
+                .data(medicinColor)
+                .enter()
+                .append("rect")
+                .attr("x", 60)
+                .attr("y", -50)
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .style("fill", medicinColor)
+            svg.append('text')
+                .text("Medicin")
+                .attr("font-family", "sans-serif")
+                .style("font-size", "10")
+                .attr("x", 60)
+                .attr("y", -55)
+
+
+        }
+    };
+
+//Read the data
+// d3.csv("/data/data_bad_press1.csv", function(data) {
+
+//   svg.selectAll()
+//       .data(data, function(d) {return d.hour+':'+d.minute;})
+//       .enter()
+//       .append("rect")
+//       .attr("x", function(d) { return x(d.hour) })
+//       .attr("y", function(d) { return y(d.minute) })
+//       .attr("width", x.bandwidth() )
+//       .attr("height", y.bandwidth() )
+//       .style("fill", function(d) { return myColor(d.value)} )
+
+// })
+
+</script>
+
+</body>

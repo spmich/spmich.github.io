@@ -1,38 +1,410 @@
 <!DOCTYPE html>
+<meta charset="utf-8">
 <html>
 <head>
-    <title>Learn D3 in 5 minutes</title>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Learn D3</title>
 </head>
 <body>
-    <p>"Hello World" </p>
-    <p> heeej </p>
+    <p>Welcome</p>
 
-    <h3>Today is a beautiful day!!</h3>
+    <h1>D3 testing</h1>
+    <ul>
+        <li><a href="../prototype1.html">Prototype 1</a></li>
+        <li><a href="../prototype2.html">Prototype 2</a></li>
+        <li><a href="../prototype3.html">Prototype 3</a></li>
 
-    <ul> </ul>
+        <li><a href="../prototype4.html">Prototype 4</a></li>
+    </ul>
+    <!-- Add a svg area, empty -->
+    <div id="Area"></div>
 
+    <!-- Add a svg area, empty -->
+    <div id="scatter_area"></div>  
+    
+    <div id="graph_area"></div>
+
+    <div id="chart"></div>
+    <div id="dataset-picker">
+    
+
+        
+
+
+    <!-- <ul> </ul> -->
+
+    <!-- <div id="my_dataviz"></div> -->
+
+    <!-- <svg></svg> -->
+
+    <!-- <svg width='200' height='500'></svg> -->
+
+    <!-- <div id="container"></div> -->
+
+  
+
+    <!-- <div class="col-sm-12 col-md-4 justify-content-sm-center">
+        <h2>d3.text() alternative</h2>
+        <div class="good">&#x2713;</div>
+        <p>Fixed the problem</p>
+        <code class="hljs javascript">data = [</code>
+        <ul id="alternative"></ul>
+        <code class="hljs javascript">]<span class="semicolon">;</span></code>
+    </div> -->
+    <script src="moment.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script>
-        d3.select('h3').style('color', 'darkblue');    
-        d3.select('h3').style('font-size', '24px');
+    <!-- Load color palettes -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script type="text/javascript">
 
-        var fruits = ['apple', 'mango', 'banana', 'orange'];    
-        d3.select('ul')        
-        .selectAll('li')        
-        .data(fruits)        
-        .enter()        
-        .append('li')        
-        .text(function(d) { return d; });
+        // var margin2 = { top: 50, right: 0, bottom: 100, left: 30 },
+        //   width2 = 960 - margin2.left - margin2.right,
+        //   height2 = 430 - margin2.top - margin2.bottom,
+        //   gridSize = Math.floor(width2 / 24),
+        //   legendElementWidth = gridSize*2,
+        //   buckets = 9,
+        //   colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+        //   days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+        //   times = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "00"];
+        //   //datasets = ["data.tsv", "data2.tsv"];
 
-        //Select SVG element
-        var svg = d3.select('svg');
-        //Create rectangle element inside SVG
-        svg.append('rect')   
-        .attr('x', 50)   
-        .attr('y', 50)   
-        .attr('width', 200)   
-        .attr('height', 100)   
-        .attr('fill', 'green');
+        //   var svggg = d3.select("#chart").append("svg")
+        //   .attr("width", width2 + margin2.left + margin2.right)
+        //   .attr("height", height2 + margin2.top + margin2.bottom)
+        //   .append("g")
+        //   .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+        //   // left-axis vertical - days
+        //   var dayLabels = svggg.selectAll(".dayLabel")
+        //   .data(days)
+        //   .enter().append("text")
+        //     .text(function (d) { return d; })
+        //     .attr("x", 0)
+        //     .attr("y", function (d, i) { return i * gridSize; })
+        //     .style("text-anchor", "end")
+        //     .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+        //     .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+        // // top-axis horizontal - hours
+        //     var timeLabels = svggg.selectAll(".timeLabel")
+        //   .data(times)
+        //   .enter().append("text")
+        //     .text(function(d) { return d; })
+        //     .attr("x", function(d, i) { return i * gridSize; })
+        //     .attr("y", 0)
+        //     .style("text-anchor", "middle")
+        //     .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+        //     .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+
+        //     var getdHours = [];
+
+        //     var tyh;
+        //     for (tyh of getdHours){
+        //         document.write(tyh + ", ");
+
+        //     }
+
+            
+        // Add header manueltly in the dataset to get going
+        d3.csv("/data/data3.csv", function(data) {
+            
+            data.sysbootmillisec = +data.sysbootmillisec; //make it a number
+            data.pressmillisec = +data.pressmillisec; //make it a number
+            data.dateTimesUTC = d3.timeParse("%Y%m%dT%H%M%SZ")(data.dateTimesUTC);
+
+            console.log(data);
+            datatimesUm = data.dateTimesUTC;
+
+            var ddd = new Date(datatimesUm)
+            var dHours = ('0' + ddd.getHours()).slice(-2);
+            var dMinutes = ('0' + ddd.getMinutes()).slice(-2);
+            var dSec = ddd.getSeconds();
+            var dDay = ddd.getDate();
+
+            var month = new Array();
+            month[0] = "01";
+            month[1] = "02";
+            month[2] = "03";
+            month[3] = "04";
+            month[4] = "05";
+            month[5] = "06";
+            month[6] = "07";
+            month[7] = "08";
+            month[8] = "09";
+            month[9] = "10";
+            month[10] = "11";
+            month[11] = "12";
+
+            var dMonth = month[ddd.getMonth()];
+            var dYear = ddd.getFullYear();
+
+            var weekday = new Array(7);
+            weekday[0] = "Sunday";
+            weekday[1] = "Monday";
+            weekday[2] = "Tuesday";
+            weekday[3] = "Wednesday";
+            weekday[4] = "Thursday";
+            weekday[5] = "Friday";
+            weekday[6] = "Saturday";
+
+            var dWeek = weekday[ddd.getDay()];
+           
+            console.log(datatimesUm);
+            console.log("The date is: " + dDay + "-" + dMonth + "-" + dYear);
+            console.log("The time is: " + dHours + ":" + dMinutes + ":" + dSec);
+            console.log("Weekday: " + dWeek );
+
+            
+            getdHours.push(dHours);
+            console.log("The array hours: " + getdHours);
+            console.log("The array length: " + getdHours.length);
+
+            var count15 = 0;
+            for(var i = 0; i < getdHours.length; ++i){
+                if(getdHours[i] == 15)
+                    count15++;
+            }
+            console.log("Count values of 15: " + count15);
+
+            var newDate = dDay + "-" + dMonth + "-" + dYear;
+            var newTime = dHours + ":" + dMinutes + ":" + dSec;
+
+            console.log("The date is now: " + newTime)
+            console.log("The time is now: " + newTime)
+
+            var m = moment('2016-03-12 13:00:00');
+            var mm = moment(data.dateTimesUTC);
+            console.log(m.format());
+            console.log(mm.format('HH:mm:ss'))
+
+
+            // var expensesCount = d3.nest()
+            // .key(function(d) { return d.dHours; })
+            // .rollup(function(v) { return v.length; })
+            // .entries(data);
+            // console.log(JSON.stringify(expensesCount));
+
+
+
+        },
+        // function(error, data){
+        //     var colorScale = d3.scaleQuantile()
+        //         .domain([0, buckets - 1, d3.max(data, function(d){ return d.count15;})])
+        //         .range(colors);
+
+        //   const cards = svggg.selectAll(".dHours")
+        //       .data(data, function(d) {return d.dWeek+':'+d.dHours;});
+
+        //   cards.append("title");
+
+        //   cards.enter().append("rect")
+        //       .attr("x", function(d) { return (d.dHours - 1) * gridSize; })
+        //       .attr("y", function(d) { return (d.dWeek - 1) * gridSize; })
+        //       .attr("rx", 4)
+        //       .attr("ry", 4)
+        //       .attr("class", "hour bordered")
+        //       .attr("width", gridSize)
+        //       .attr("height", gridSize)
+        //       .style("fill", colors[0]);
+
+        //   cards.transition().duration(1000)
+        //       .style("fill", function(d) { return colorScale(d.count15); });
+
+        //   cards.select("title").text(function(d) { return d.count15; });
+          
+        //   cards.exit().remove();
+
+        //   var legend = svggg.selectAll(".legend")
+        //       .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+
+        //   legend.enter().append("g")
+        //       .attr("class", "legend");
+
+        //   legend.append("rect")
+        //     .attr("x", function(d, i) { return legendElementWidth * i; })
+        //     .attr("y", height)
+        //     .attr("width", legendElementWidth)
+        //     .attr("height", gridSize / 2)
+        //     .style("fill", function(d, i) { return colors[i]; });
+
+        //   legend.append("text")
+        //     .attr("class", "mono")
+        //     .text(function(d) { return "≥ " + Math.round(d); })
+        //     .attr("x", function(d, i) { return legendElementWidth * i; })
+        //     .attr("y", height + gridSize);
+
+        //   legend.exit().remove();
+
+        //}
+        
+        );
+
+        // // set the dimensions and margins of the graph
+        // var margin = {top: 10, right: 40, bottom: 30, left: 30},
+        //     width = 450 - margin.left - margin.right,
+        //     height = 400 - margin.top - margin.bottom;
+
+        // // append the svg object to the body of the page
+        // var sVg = d3.select("#Area")
+        // .append("svg")
+        //     .attr("width", width + margin.left + margin.right)
+        //     .attr("height", height + margin.top + margin.bottom)
+        // // translate this svg element to leave some margin.
+        // .append("g")
+        //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // // X scale and Axis
+        // var x = d3.scaleLinear()
+        //     .domain([0, 100])         // This is the min and the max of the data: 0 to 100 if percentages
+        //     .range([0, width]);       // This is the corresponding value I want in Pixel
+        // sVg
+        // .append('g')
+        // .attr("transform", "translate(0," + height + ")")
+        // .call(d3.axisBottom(x));
+
+        // // X scale and Axis
+        // var y = d3.scaleLinear()
+        //     .domain([0, 100])         // This is the min and the max of the data: 0 to 100 if percentages
+        //     .range([height, 0]);       // This is the corresponding value I want in Pixel
+        // sVg
+        // .append('g')
+        // .call(d3.axisLeft(y));
+
+        // // ----------------------------------- //
+
+        // // append the svg object to the body of the page
+        // var svG = d3.select("#scatter_area")
+        // .append("svg")
+        //     .attr("width", width + margin.left + margin.right)
+        //     .attr("height", height + margin.top + margin.bottom)
+        // .append("g")
+        //     .attr("transform",
+        //         "translate(" + margin.left + "," + margin.top + ")");
+
+        // // Create data
+        // var data = [ {x2:10, y2:20}, {x2:40, y2:90}, {x2:80, y2:50} ]
+
+        // // X scale and Axis
+        // var x2 = d3.scaleLinear()
+        //     .domain([0, 100])         // This is the min and the max of the data: 0 to 100 if percentages
+        //     .range([0, width]);       // This is the corresponding value I want in Pixel
+        // svG
+        // .append('g')
+        // .attr("transform", "translate(0," + height + ")")
+        // .call(d3.axisBottom(x2));
+
+        // // X scale and Axis
+        // var y2 = d3.scaleLinear()
+        //     .domain([0, 100])         // This is the min and the max of the data: 0 to 100 if percentages
+        //     .range([height, 0]);       // This is the corresponding value I want in Pixel
+        // svG
+        // .append('g')
+        // .call(d3.axisLeft(y2));
+
+        // // Add 3 dots for 0, 50 and 100%
+        // svG
+        // .selectAll("whatever")
+        // .data(data)
+        // .enter()
+        // .append("circle")
+        //     .attr("cx", function(d){ return x(d.x2) })
+        //     .attr("cy", function(d){ return y(d.y2) })
+        //     .attr("r", 7)
+
+        
+        // // ------------------------------------ //
+
+        // // making a new graph - putting in the data 
+
+        // // append the svg object to the body of the page
+        // var svgg = d3.select("#graph_area")
+        // .append("svg")
+        //     .attr("width", width + margin.left + margin.right)
+        //     .attr("height", height + margin.top + margin.bottom)
+        // .append("g")
+        //     .attr("transform",
+        //         "translate(" + margin.left + "," + margin.top + ")");
+
+        // // X scale and Axis
+        // var x3 = d3.scaleLinear()
+        //     .domain([0, 200]) // the min and the max of the data
+        //     .range([0, width]); // 
+        // svgg
+        // .append('g')
+        // .attr("transform", "translate(0," + height + ")")
+        // .call(d3.axisBottom(x3));
+
+        // // Y scale and Axis
+        // var y3 = d3.scaleLinear()
+        //     .domain([0,100])
+        //     .range([0, height]);
+        // svgg
+        // .append('g')
+        // .call(d3.axisLeft(y3));
+
+        // // Adding the dots
+
+        // //svgg
+
+
+
+
+
+
+
+
+
+        //------------------------------------------//
+        // //CSV without header workaround
+        // d3.text('data/data.csv').then(text => {
+        //     const data = d3.csvParseRows(text, row => {
+        //         return {
+        //             'dateTime': row[0],
+        //             'sysMillisec': +row[1],
+        //             'tapMillisec': +row[2]
+        //         }
+        //     });
+
+        //     console.log(data['dateTime']);
+            
+        //     //dateTimes = d3.timeParse("%Y%m%dT%H%M%SZ")(d['dateTime']);
+        //     const blocks = d3.select('#alternative')
+        //         .selectAll('li')
+        //         .data(data)
+        //         .enter()
+        //         .append('li')
+        //         .append('pre')
+        //         .append('code')
+        //         .attr('class', 'hjls json')
+        //         .text((d, i) => formatJson(d, i, data.length));
+
+        //     //blocks.nodes().forEach(block => hljs.highlightBlock(block));
+        // });
+
+        // function formatJson(d, i, length) {
+        //     const suffix = i === length - 1 ? '': ',';
+        //     const json = JSON.stringify(d,  null, 2);
+        //     return `${json}${suffix}`;
+        // }
+
+        
+
+        //----------------
+
+        // set the dimensions and margins of the graph
+        // var margin = {top: 80, right: 25, bottom: 30, left: 40},
+        // width = 450 - margin.left - margin.right,
+        // height = 450 - margin.top - margin.bottom;
+
+        // // append the svg object to the body of the page
+        // var svg = d3.select("#my_dataviz")
+        // .append("svg")
+        // .attr("width", width + margin.left + margin.right)
+        // .attr("height", height + margin.top + margin.bottom)
+        // .append("g")
+        // .attr("transform",
+        //         "translate(" + margin.left + "," + margin.top + ")");
+
+        
     
     </script>
     </body>

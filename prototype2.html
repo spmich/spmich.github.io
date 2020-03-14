@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Prototype2</title>
+    <!-- D3 VERSION 2 -->
+    <!-- <script src="https://d3js.org/d3.v2.js"></script> -->
+    <!-- D3 VERSION 3 -->
+    <script src="https://d3js.org/d3.v3.js"></script>
+    <!-- D3 VERSION 4 -->
+    <!-- <script src="https://d3js.org/d3.v4.js"></script> -->
+    <!-- D3 VERSION 5 -->
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+    <!-- Load color palettes -->
+    <!-- <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script> -->
+</head>
+<body>
+
+    <h1>Prototype 2</h1>
+    <p>Suger craving</p>
+    <script src="moment.js"></script>
+
+    <div class="days-hours-heatmap">
+        <!-- calibration and render type controller -->
+        <div class="calibration" role="calibration">
+          <div class="group" role="example">
+            <svg width="300" height="17">
+            </svg>
+            <div role="description" class="description">
+              <label>Less</label>
+              <label>More</label>
+            </div>        
+          </div>
+          <!-- <div role="toggleDisplay" class="display-control">
+            <div>
+              <input type="radio" name="displayType" />
+              <label>count</label>
+            </div>
+            <div>
+              <input type="radio" name="displayType" checked/>
+              <label>daily</label> 
+            </div>
+          </div> -->
+        </div>
+        <!-- heatmap -->
+        <svg role="heatmap" class="heatmap"></svg>
+      </div>
+
+
+    <script type="text/javascript">   
+
+        //UI configuration
+        var itemSize = 18,
+            newItemSize = 43,
+            cellSize = itemSize-1,
+            newCellSize = newItemSize-1,
+            width = 800,
+            height = 800,
+            margin = {top:20,right:20,bottom:20,left:50};
+            margin2 = {top:20,right:20,bottom:20,left:50};
+
+        //formats
+        var hourFormat = d3.time.format('%H'),
+            dayFormat = d3.time.format('%j'), //day of the year as a decimal number [001,366]
+            timeFormat = d3.time.format('%Y%m%dT%H%M%SZ'),
+            monthDayFormat = d3.time.format('%d.%m');
+
+        //data vars for rendering
+        var dateExtent = null,
+            data = null,
+            dayOffset = 0,
+            colorCalibration = ['#f6faaa','#FEE08B','#FDAE61','#F46D43','#D53E4F','#9E0142'],
+            dailyValueExtent = {};
+
+        //axises and scales
+        var axisWidth = 0 ,
+            axisHeight = (newItemSize/2)*24,
+
+            xAxisScale = d3.time.scale(),
+
+            xAxis = d3.svg.axis()
+            .orient('top')
+            .ticks(d3.time.days,0) //Days (e.g., February 7, 2012 at 12:00 AM). Most days are 24 hours long (864e5 milliseconds); however, with Daylight Savings Time, a day may be 23 or 25 hours long.
+            .tickFormat(monthDayFormat),
+
+            yAxisScale = d3.scale.linear()
+            .range([0,axisHeight])
+            .domain([0,24]),
+
+            yAxis = d3.svg.axis()
+            .orient('left')
+            .ticks(24)
+            .tickFormat(d3.format('02d')) // d3.format("02d")(1); // 01 --> // d - decimal notation, rounded to integer // 02 gives 2 decimal
+            .scale(yAxisScale);
+
+        initCalibration();
+
+        var svg = d3.select('[role="heatmap"]');
+        var heatmap = svg
+            .attr('width',width)
+            .attr('height',height)
+        .append('g')
+            .attr('width',width-margin.left-margin.right)
+            .attr('height',height-margin.top-margin.bottom)
+            .attr('transform','translate('+margin.left+','+margin.top+')');
+        var rect = null;
+
+        // LOADING THE DATA
+        d3.csv("/data/data3_3test.csv", function(data){
+
+            data.forEach(function(valueObj){
+            valueObj['date'] = timeFormat.parse(valueObj['dateTimesUTC']);
+            console.log(valueObj['date']);
+            var day = valueObj['day'] = monthDayFormat(valueObj['date']);
+            console.log(day);
+            var dayData = dailyValueExtent[day] = (dailyValueExtent[day] || [1000,-1]);
+            var pmValue = valueObj['count'];
+            dayData[0] = d3.min([dayData[0],pmValue]);
+            dayData[1] = d3.max([dayData[1],pmValue]);
+            });
+
+            dateExtent = d3.extent(data,function(d){
+                return d.date;
+            });
+            console.log(dateExtent);
+
+            axisWidth = newItemSize*(dayFormat(dateExtent[1])-dayFormat(dateExtent[0])+1);
+
+            //render axises
+            xAxis.scale(xAxisScale.range([0,axisWidth]).domain([dateExtent[0],dateExtent[1]]));  
+            svg.append('g')
+                .attr('transform','translate('+margin2.left+','+margin2.top+')')
+                .attr('class','x axis')
+                .call(xAxis)
+                .append('text')
+                .text('date')
+                .attr('transform','translate('+axisWidth+',-10)');
+
+            svg.append('g')
+                .attr('transform','translate('+margin.left+','+margin.top+')')
+                .attr('class','y axis')
+                .call(yAxis)
+                .append('text')
+                .text('time')
+                .attr('transform','translate(-30,'+axisHeight+') rotate(-90)');
+
+            //render heatmap rects
+            dayOffset = dayFormat(dateExtent[0]);
+            rect = heatmap.selectAll('rect')
+                .data(data)
+                .enter().append('rect')
+                .attr('width',newCellSize)
+                .attr('height',newCellSize/2)
+                .attr('x',function(d){
+                    return newItemSize*(dayFormat(d.date)-dayOffset);
+                })
+                .attr('y',function(d){            
+                    return hourFormat(d.date)*(newItemSize/2);
+                })
+                .attr('fill','#ffffff');
+
+            rect.filter(function(d){ return d.count>0;})
+                .append('title')
+                .text(function(d){
+                    return monthDayFormat(d.date)+' '+d.count;
+                });
+
+            renderColor();
+        });
+
+        
+
+
+            //color-scale
+        function initCalibration(){
+            d3.select('[role="calibration"] [role="example"]').select('svg')
+            .selectAll('rect').data(colorCalibration).enter()
+            .append('rect')
+            .attr('width',newCellSize)
+            .attr('height',newCellSize)
+            .attr('x',function(d,i){
+                return i*newItemSize;
+            })
+            .attr('fill',function(d){
+                return d;
+            });
+
+            //bind click event
+            d3.selectAll('[role="calibration"] [name="displayType"]').on('click',function(){
+                renderColor();
+            });
+        }
+
+        function renderColor(){
+            //var renderByCount = document.getElementsByName('displayType')[0].checked;
+
+            rect
+            .filter(function(d){
+                return (d.count>=0);
+            })
+            .transition()
+            .delay(function(d){      
+                return (dayFormat(d.date)-dayOffset)*15;
+            })
+            .duration(500)
+            .attrTween('fill',function(d,i,a){
+                //choose color dynamicly      
+                var colorIndex = d3.scale.quantize()
+                .range([0,1,2,3,4,5])
+                .domain((dailyValueExtent[d.day]));
+                //.domain((renderByCount?[0,500]:dailyValueExtent[d.day]));
+
+            return d3.interpolate(a,colorCalibration[colorIndex(d.count)]);
+            });
+        }
+
+
+
+        // var parseTime = d3.time.format.utc("%H:%M:%S").parse,
+        //     midnight = parseTime("00:00:00");
+
+        // var margin = {top: 30, right: 30, bottom: 30, left: 30},
+        //     width = 960 - margin.left - margin.right,
+        //     height = 500 - margin.top - margin.bottom;
+
+        // var x = d3.time.scale.utc()
+        //     .domain([midnight, d3.time.day.utc.offset(midnight, 1)])
+        //     .range([0, width]);
+
+        // function type(d) {
+        //     d.rate = +d.count / 327 * 60; // January 8 to November 30
+        //     d.time = parseTime(d.time);
+        //     d.time.setUTCHours((d.time.getUTCHours() + 24 - 7) % 24);
+        //     return d;
+        // }
+
+        
+
+    //     d3.csv("/data/data3.csv", function(data) {
+
+    //         var m = moment('2016-03-12 13:00:00');
+    //         var mm = moment(data.dateTimesUTC);
+    //         var mDate = moment(data.dateTimesUTC).format('DD-MM-YYYY');
+    //         var mHour = moment(data.dateTimesUTC).format('HH:mm:ss');
+    //         console.log(m.format());
+    //         console.log(mDate);
+    //         console.log(mHour);
+    //         console.log(mm.startOf('day'));
+
+    //     },
+    //     function(error, data){
+
+    //         //var yValue = function(data) { return moment(data.dateTimesUTC).format('HH:mm:ss');}
+    //         //var xValue = function(data) { return moment(data.dateTimesUTC).format('DD-MM-YYYY');}
+
+    //         //xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+    //         //yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+    //         var width = 700,
+    //         height = 400,
+    //         padding = 100;
+
+    //         // create an svg container
+    //         var vis = d3.select("body").
+    //         append("svg:svg")
+    //             .attr("width", width)
+    //             .attr("height", height);
+
+    //         var xScale = d3.scaleTime()
+    //         .domain([moment("2010-01-01"),moment("2010-01-31")])
+    //         //.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1])
+    //         //.domain(d3.extent(data, function(d) { return d.moment(data.dateTimesUTC).format('HH:mm:ss'); }))
+    //         .range([padding, width - padding * 2])
+
+    //         var yScale = d3.scaleTime()
+    //         //.domain([moment('00:00:00'), moment('23:59:59')])
+    //         //.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1])
+    //         //.domain(d3.extent(data, function(d) { return d.time; }))
+    //         .range([height - padding, padding])
+
+    //     //     var yAxis = d3.svg.axis()
+    //     //     .orient("left")
+    //     //     .scale(yScale);
+        
+    //     // // define the y axis
+    //     // var xAxis = d3.svg.axis()
+    //     //     .orient("bottom")
+    //     //     .scale(xScale);
+
+    //     var xAxis = d3.axisBottom(xScale)
+    //     var yAxis = d3.axisLeft(yScale)
+            
+    //     // draw y axis with labels and move in from the size by the amount of padding
+    //     vis.append("g")
+    //         .attr("transform", "translate("+padding+",0)")
+    //         .call(yAxis);
+
+    //     // draw x axis with labels and move to the bottom of the chart area
+    //     vis.append("g")
+    //         .attr("class", "xaxis")   // give it a class so it can be used to select only xaxis labels  below
+    //         .attr("transform", "translate(0," + (height - padding) + ")")
+    //         .call(xAxis);
+            
+    //     // now rotate text on x axis
+    //     // solution based on idea here: https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
+    //     // first move the text left so no longer centered on the tick
+    //     // then rotate up to get 45 degrees.
+    //    vis.selectAll(".xaxis text")  // select all the text elements for the xaxis
+    //       .attr("transform", function(d) {
+    //           return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
+    //     });
+        
+    //     });
+
+
+    </script>
+
+</body>
+</html>

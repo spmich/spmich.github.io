@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Prototype1</title>
+    <!-- D3 VERSION 3 -->
+    <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
+    <!-- D3 VERSION 4 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- D3 VERSION 5 -->
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+    <!-- Load color palettes -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+</head>
+<body>
+
+    <h1>Prototype 1</h1>
+    <p>Suger craving</p>
+
+    <div id="chart"></div>
+    <div id="dataset-picker">
+
+    <script type="text/javascript">
+
+        var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+          width = 960 - margin.left - margin.right,
+          height = 430 - margin.top - margin.bottom,
+          gridSize = Math.floor(width / 24),
+          legendElementWidth = gridSize*2,
+          buckets = 9,
+          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+          days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+          times = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "00"];
+          //datasets = ["data.tsv", "data2.tsv"];
+
+          var svggg = d3.select("#chart").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          // left-axis vertical - weekdays
+          var dayLabels = svggg.selectAll(".dayLabel")
+          .data(days)
+          .enter().append("text")
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * gridSize; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+        // top-axis horizontal - hours
+            var timeLabels = svggg.selectAll(".timeLabel")
+          .data(times)
+          .enter().append("text")
+            .text(function(d) { return d; })
+            .attr("x", function(d, i) { return i * gridSize; })
+            .attr("y", 0)
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+
+        // Add header manueltly in the dataset to get going
+        d3.csv("/data/data5_weekday_hour_value.csv", function(data) {
+            return{
+                weekday: +data.weekday,
+                hour: +data.hour,
+                value: +data.value
+            };
+            
+            //data.weekday = +data.weekday;
+            //data.hour = +data.hour;
+            //data.value = +data.value;
+
+            //console.log(data);
+
+        },
+        function(error, data){
+            
+        //---------- Example found on the internet -----------
+
+          const colorScale = d3.scaleQuantile()
+            .domain([0, buckets - 1, d3.max(data, (d) => d.value)])
+            .range(colors);
+
+          const cards = svggg.selectAll(".hour")
+              .data(data, (d) => d.weekday+':'+d.hour);
+
+          cards.append("title");
+
+          cards.enter().append("rect")
+              .attr("x", (d) => (d.hour) * gridSize)
+              .attr("y", (d) => (d.weekday) * gridSize)
+              .attr("rx", 4)
+              .attr("ry", 4)
+              .attr("class", "hour bordered")
+              .attr("width", gridSize)
+              .attr("height", gridSize)
+              .style("fill", colors[0])
+            .merge(cards)
+              .transition()
+              .duration(1000)
+              .style("fill", (d) => colorScale(d.value));
+
+          cards.select("title").text((d) => d.value);
+
+          cards.exit().remove();
+
+          const legend = svggg.selectAll(".legend")
+              .data([0].concat(colorScale.quantiles()), (d) => d);
+
+          const legend_g = legend.enter().append("g")
+              .attr("class", "legend");
+
+          legend_g.append("rect")
+            .attr("x", (d, i) => legendElementWidth * i)
+            .attr("y", height)
+            .attr("width", legendElementWidth)
+            .attr("height", gridSize / 2)
+            .style("fill", (d, i) => colors[i]);
+
+          legend_g.append("text")
+            .attr("class", "mono")
+            .text((d) => "≥ " + Math.round(d))
+            .attr("x", (d, i) => legendElementWidth * i)
+            .attr("y", height + gridSize);
+
+          legend.exit().remove();
+
+        }
+        
+        );
+    
+
+        
+    
+    </script>
+
+</body>
+</html>
