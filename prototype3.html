@@ -56,16 +56,18 @@
         ];
 
         var xScale = d3.scale.linear()
-            .domain([0, d3.max(dataset, function(d){ return d.x; })])
+            .domain([00, 24])
+            //.domain([0, d3.max(dataset, function(d){ return d.x; })])
             .range([0, width]);
 
         var yScale = d3.scale.linear()
-            .domain([0, d3.max(dataset, function(d){ return d.y; })])
-            .range([height, 0]);
+            .domain([00,60])
+            //.domain([0, d3.max(dataset, function(d){ return d.y; })])
+            .range([0,height]);
 
         var xAxis = d3.svg.axis()
             .scale(xScale)
-            .orient("bottom")
+            .orient("top")
             .ticks(24) //add line for every 24 value / hour
             .innerTickSize(-height)
             .outerTickSize(0)
@@ -92,12 +94,24 @@
 
         svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
+            //.attr("transform", "translate(0," + height + ")")
             .call(xAxis)
 
         svg.append("g")
             .attr("class", "y axis")
             .call(yAxis)
+
+        svg.selectAll()
+            .data(dataset)
+            .enter()
+            .append("rect")
+            .attr("x", function(d){ return xScale(d.x); })
+            .attr("y", function(d){ return yScale(d.y); })
+            .attr('width', width/24)
+            .attr('height', height/60)
+            .attr('fill', 'blue')
+            .style("stroke", "#222");
+
 
         // svg.append("path")
         //     .data([dataset])
