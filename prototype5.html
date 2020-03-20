@@ -87,7 +87,7 @@
         // the colors
         badColor = "#B22222"        // red
         goodColor = "#32CD32"       // green
-        medicinColor = "#808080"    // grey
+        medicineColor = "#808080"    // grey
 
         // datasets
         dataset1 = "/data/data_all_press.csv"
@@ -218,16 +218,16 @@
             
             // colorscale - grey / medicin
             svg.selectAll()
-                .data(medicinColor)
+                .data(medicineColor)
                 .enter()
                 .append("rect")
                 .attr("x", 60)
                 .attr("y", -50)
                 .attr("width", width/24 )
                 .attr("height", height/60 )
-                .style("fill", medicinColor)
+                .style("fill", medicineColor)
             svg.append('text')
-                .text("Medicin")
+                .text("Medicine")
                 .attr("font-family", "sans-serif")
                 .style("font-size", "10")
                 .attr("x", 60)
@@ -273,7 +273,7 @@
                                 return goodColor; // good - green
                         }
                         if (d.value == 3 ) {
-                            return medicinColor; // med - grey
+                            return medicineColor; // med - grey
                         }
                     })
                     .on('mouseover', function(d) {
