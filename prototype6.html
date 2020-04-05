@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="css-styles.css">
+    <title>Prototype6</title>
+    <!-- D3 VERSION 2 -->
+    <!-- <script src="https://d3js.org/d3.v2.js"></script> -->
+    <!-- D3 VERSION 3 -->
+    <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
+    <!-- D3 VERSION 4 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- D3 VERSION 5 -->
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+</head>
+<style>
+    
+</style>
+<body>
+    <h2>Prototype 6</h2>
+
+    <div id="visualisation"></div>
+
+    <script type="text/javascript">
+
+        var margin = {top: 100, right: 100, bottom: 30, left: 100},
+                width = 1060 - margin.left - margin.right,
+                height = 1000 - margin.top - margin.bottom;
+
+        
+        // Create the SVG
+        var svg = d3.select("#visualisation").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+        //formats
+        var hourFormat = d3.timeFormat('%H'),
+            hourMinuteFormat = d3.timeFormat('%H%M'),
+            hourMinuteFormatUTC = d3.utcParse('%H%M'), // get it with UTC time
+            dayMonthFormat = d3.timeFormat('%d%m'),
+            dayMonthFormatUTC = d3.utcParse('%d%m'), // UTC
+            dayFormat = d3.timeFormat('%j'), //day of the year as a decimal number [001,366]
+            timeFormat = d3.timeParse('%Y%m%dT%H%M%SZ'),  // Without UTC behavior varies across browsers, sometimes coerced to browser local time
+            //timeFormat = d3.timeFormat('%Y%m%dT%H%M%SZ'),
+            timeFormat2 = d3.utcParse('%Y%m%dT%H%M%SZ'), // get it with UTC time
+            monthDayFormat = d3.timeFormat('%d.%m');
+            //d3.format('02d')
+
+        // the colors
+        badColor = "#B22222"        // red
+        goodColor = "#32CD32"       // green
+        medicineColor = "#808080"    // grey
+
+        timeExtent = [{'timestamp':'20200204T000000Z'}, {'timestamp':'20200204T235959Z'}]
+        console.log("tiiiime : "+ timeExtent)
+
+        // LOADING THE DATA
+        d3.csv("/data/data_timestamp1.csv", function(data){
+            // get the timestamp in the dataset and format it
+            data.forEach(function(valueObj){
+                valueObj['date'] = timeFormat2(valueObj['timestamp']);
+                console.log(valueObj['date']);
+            });
+            console.log(data);
+            // find the min and max date in dataset
+            dateExtent = d3.extent(data,function(d){
+                    return d.date;
+            });
+            console.log(dateExtent);
+            // get the timestamp for timeExtent dataset
+            timeExtent.forEach(function(valueObj){
+                valueObj['dateee'] = timeFormat(valueObj['timestamp']);
+                console.log(valueObj['dateee']);
+            });
+
+            //weeklyData = [{}]
+            //mondayDate = 
+
+           //newDate = d3.timeDays(new Date(d, 0, 1), new Date(d + 1, 0, 1));
+           // console.log("Monday ??: " + newDate);
+
+            // minimum date
+            minDate = d3.min(data,function(d){
+                return d.date;
+            });
+            console.log(minDate)
+
+            //maximum date
+            maxDate = d3.max(data,function(d){
+                return d.date;
+            });
+            console.log(maxDate)
+
+            console.log(d3.extent(timeExtent, function(d) { return hourMinuteFormat(d.dateee);}));
+
+            console.log(function(d) { return dayMonthFormatUTC(d.date);})
+
+            console.log(dayMonthFormat(data))
+
+                //dayOffset = dayFormat(dateExtent[0]);
+
+                //console.log("Day Off Set: " + dayOffset);
+
+                var xScale = d3.scaleTime() // d3 v4
+                    //.domain([0, function(d){ return dayFormat(d.date)}])
+                    //.range([0, width])
+                    .domain([minDate,maxDate])
+                    //.domain(dateExtent)
+                    .range([0, width]);
+
+                var yScale = d3.scaleTime() // d3 v4
+                    //.domain([0, 24])
+                    //.range([0,height]);
+                    .domain(d3.extent(timeExtent, function(d) { return hourMinuteFormat(d.dateee);}))
+                    //.domain(d3.extent(data, function(d) { return hourMinuteFormat(d.date); }))
+                    .rangeRound([0, width]);
+
+                var xAxis = d3.axisTop(xScale)
+                    .ticks(3)
+                    //.ticks(d3.max(data, function(d) { return dayMonthFormat(d.date); })) 
+                    .tickSizeInner(-height)
+                    .tickSizeOuter(0)
+                    .tickPadding(10)
+                    //.tickFormat(dayMonthFormat);
+
+                var yAxis = d3.axisLeft(yScale)
+                    .ticks(24) //add line for every 24 value / hour
+                    .tickFormat(d3.format('02d')) // d3.format("02d")(1); // 01 --> // d - decimal notation, rounded to integer // 02 gives 2 decimal
+                    .tickSizeInner(-width)
+                    .tickSizeOuter(0)
+                    .tickPadding(10)
+                    //.tickFormat(hourMinuteFormat);
+
+
+                //call x-axis
+                svg.append("g")
+                    .attr("class", "x axis")
+                    .call(xAxis)
+                    .selectAll("text")
+                        .attr("text-anchor", "start")
+                        .attr("x", 150)
+                        .attr("dy", null);
+
+                //call y-axis
+                svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis)
+
+                // TEXT X-Axis - Date
+                svg.append("g")
+                    .attr("class", "x axis")
+                    .call(xScale)
+                    .append("text")
+                    .attr("x", (width/2)-30)
+                    .attr("y", -30)
+                    .style("text-anchor", "middel")
+                    .style("font-weight", "bold")
+                    .style("font-size", "20")
+                    .text("Date");
+
+                // TEXT Y-Axis - Hours   
+                svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yScale)
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", -30)
+                    .attr("x", -height/2)
+                    .style("text-anchor", "middel")
+                    .style("font-weight", "bold")
+                    .style("font-size", "20")
+                    .text("Hours");
+
+                // colorscale - red / bad
+                svg.selectAll()
+                    .data(badColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", -10)
+                    .attr("cy", -40)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", badColor)
+                svg.append('text')
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .text("Bad")
+                    .attr("x", -20)
+                    .attr("y", -55);
+
+                // colorscale - green / good
+                svg.selectAll()
+                    .data(goodColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", 35)
+                    .attr("cy", -40)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", goodColor)
+                svg.append('text')
+                    .text("Good")
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .attr("x", 20)
+                    .attr("y", -55)
+                    
+                // colorscale - grey / medicin
+                svg.selectAll()
+                    .data(medicineColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", 80)
+                    .attr("cy", -40)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", medicineColor)
+                svg.append('text')
+                    .text("Medicine")
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .attr("x", 60)
+                    .attr("y", -55) 
+
+                // Add data on the graph
+                var leSVG = svg.selectAll()
+                    .data(data);
+                
+                leSVG.exit().remove();
+                    
+                leSVG.enter()
+                    .append("circle")
+                    .attr("cx", function(d){ return dayMonthFormat(d.date); })
+                    .attr("cy", function(d){ return hourMinuteFormat(d.date); })
+                    .attr("r", 5)
+                    //.attr('width', width/24)
+                    //.attr('height', height/60)
+                    .style("stroke", "#222")
+                    .style("fill", function(d) {           
+                        if (d.value == 1 ) {
+                            return badColor; // bad - red
+                        }
+                        if (d.value == 2 ) {
+                                return goodColor; // good - green
+                        }
+                        if (d.value == 3 ) {
+                            return medicineColor; // med - grey
+                        }
+                    })
+                    // .on('mouseover', function(d) {
+                    //     d3.select('#tooltip')
+                    //         .transition()
+                    //         .duration(200)
+                    //         .style('opacity', 1)
+                    //         .text("Time: " + d.hour + ":"  + d.minute)
+                    //         .style("background-color", "white")
+                    //         .style("border", "solid")
+                    //         .style("border-width", "2px")
+                    //         .style("border-radius", "5px")
+                    //         .style("padding", "5px")
+
+                    // })
+                    // .on('mouseout', function() {
+                    //     d3.select('#tooltip')
+                    //         .style('opacity', 0)
+                    // })
+                    // .on('mousemove', function() {
+                    //     d3.select('#tooltip')
+                    //         .style('left', (d3.event.pageX+10) + 'px')
+                    //         .style('top', (d3.event.pageY+10) + 'px')
+                    // })
+                    
+            })
+    
+    </script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Prototype7</title>
+    <!-- D3 VERSION 3 -->
+    <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
+    <!-- D3 VERSION 4 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- D3 VERSION 5 -->
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+    <!-- Load color palettes -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+</head>
+<body>
+
+    <h1>Prototype 7</h1>
+    <p>Parkinson</p>
+
+    <div id="chart"></div>
+    <!-- <div id="dataset-picker"> -->
+    <div id="chart2"></div>
+    <div id="grid"></div>
+
+    <script type="text/javascript">
+
+        var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+          width = 960 - margin.left - margin.right,
+          height = 700 - margin.top - margin.bottom,
+          gridSize = Math.floor(width / 24),
+          legendElementWidth = gridSize*2,
+          buckets = 9,
+          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+          days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+          times = ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
+          //datasets = ["data.tsv", "data2.tsv"];
+
+        var svggg = d3.select("#chart").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // left-axis vertical - weekdays
+        var dayLabels = svggg.selectAll(".dayLabel")
+          .data(days)
+          .enter().append("text")
+            .text(function (d) { return d; })
+            .attr("y", -40)
+            .attr("x", function (d, i) { return i * (gridSize + 80)+110; })
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+        // top-axis horizontal - hours
+        var timeLabels = svggg.selectAll(".timeLabel")
+            .data(times)
+            .enter()
+            .append("text")
+            .text(function(d) { return d; })
+            .attr("y", function(d, i) { return i * (gridSize/1.5)+25; })
+            .attr("x", 0)
+            .style("text-anchor", "end")
+            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+
+        // the colors
+        badColor = "#B22222"        // red
+        goodColor = "#32CD32"       // green
+        medicinColor = "#808080"    // grey
+
+        // Build color scale - red
+        var myColor1 = d3.scaleLinear()
+            .range(["white", badColor])
+            .domain([0,1])
+
+        // Build color scale - green
+        var myColor2 = d3.scaleLinear()
+            .range(["white", goodColor])
+            .domain([0,2])
+
+        // Build color scale - grey
+        var myColor3 = d3.scaleLinear()
+            .range(["white", medicinColor])
+            .domain([0,3])
+
+            
+            //grid function
+        function gridData() {
+            var data1 = new Array();
+            var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
+            var ypos = 1;
+            var width = gridSize+80;
+            var height = gridSize/1.5;
+            var click = 0;
+            
+            // iterate for rows	
+            for (var row = 0; row < 24; row++) {
+                data1.push( new Array() );
+                    
+                // iterate for cells/columns inside rows
+                for (var column = 0; column < 7; column++) {
+                    data1[row].push({
+                        x: xpos,
+                        y: ypos,
+                        width: width,
+                        height: height,
+                        click: click
+                    })
+                    // increment the x position. I.e. move it over by 50 (width variable)
+                    xpos += width;
+                }
+                // reset the x position after a row is complete
+                xpos = 1;
+                // increment the y position for the next row. Move it down 50 (height variable)
+                ypos += height;	
+            }
+            return data1;
+        }
+
+        var gridData = gridData();	
+        // quick debugging
+        console.log(gridData);
+
+        // var grid = d3.select("#grid")
+        //     .append("svg")
+        //     .attr("width","510px")
+        //     .attr("height","510px");
+            
+        // var row = grid.selectAll(".row")
+        //     .data(gridData)
+        //     .enter().append("g")
+        //     .attr("class", "row");
+
+        var row = svggg.selectAll(".row")
+            .data(gridData)
+            .enter().append("g")
+            .attr("class", "row");
+
+        var timeFormat = d3.timeFormat('%H:%M'),
+            dateFormat = d3.timeFormat('%d-%m-%y'),
+            hourMinuteFormat = d3.timeFormat('%H:%M'),
+            weekFormat = d3.timeFormat('%u'),
+            //hourMinuteFormatUTC = d3.utcParse('%H%M'), // get it with UTC time
+            //dayMonthFormat = d3.timeFormat('%d%m'),
+            //dayMonthFormatUTC = d3.utcParse('%d%m'), // UTC
+            //dayFormat = d3.timeFormat('%j'), //day of the year as a decimal number [001,366]
+            timeFormat3 = d3.timeParse('%Y%m%dT%H:%M:%SZ');  // Without UTC behavior varies across browsers, sometimes coerced to browser local time
+            //timeFormat = d3.timeFormat('%Y%m%dT%H%M%SZ'),
+            //timeFormat2 = d3.utcParse('%Y%m%dT%H%M%SZ'), // get it with UTC time
+            //monthDayFormat = d3.timeFormat('%d.%m');
+            //d3.format('02d')
+
+            // ** GETTING THE DOMAIN FOR MINIMUM AND MAXIMUM FOR THE HOURS OF THE DAY - Y-AXIS **
+
+            timeExtent = [{'timestamp':'20200204T00:00:00Z'}, {'timestamp':'20200204T23:59:59Z'}]
+
+            // get the timestamp for timeExtent dataset
+            timeExtent.forEach(function(valueObj){
+                valueObj['tiiime'] = timeFormat3(valueObj['timestamp']);
+                console.log(valueObj['tiiime']);
+            });
+
+            yExtentedTime = d3.extent(timeExtent, function(d) { return hourMinuteFormat(d.tiiime);})
+
+            console.log("Extented time: " + yExtentedTime); // 00:00,23:59
+
+            var newParsedTime1 = yExtentedTime[0].split(':'); // 00,00
+            var newParsedTime2 = yExtentedTime[1].split(':'); // 23,59
+
+            console.log("new parsed: " + newParsedTime1) // 00,00
+            console.log("new parsed: " + newParsedTime2) // 23,59
+
+            minDateTime = new Date(1970, 0, 1, newParsedTime1[0], newParsedTime1[1],0); 
+            maxDateTime = new Date(1970, 0, 1, newParsedTime2[0], newParsedTime2[1],0);
+
+            var formatTime = d3.timeFormat("%H:%M");
+            //var formatMinutes = function (d) { return formatTime(new Date(2012, 0, 1, 0, d)); };
+
+            var yScale = d3.scaleTime()
+                //.domain(d3.extent(timeExtent, function(d) { return hourMinuteFormat(d.tiiime);}))
+                .rangeRound([0, height]);
+
+            var yAxis = d3.axisLeft(yScale)
+                .ticks(24) //add line for every 24 value / hour
+                .tickFormat(formatTime)
+                // .tickSizeInner(-width)
+                // .tickSizeOuter(0)
+                //.tickPadding(10);
+
+            // ** X-AXIS **
+
+            var xScale = d3.scaleLinear()
+                .domain([0,7])
+                .rangeRound([0, width]);
+            
+            var xAxis = d3.axisTop(xScale)
+                .ticks(6)
+                //.tickFormat(weekFormat)
+        
+
+
+                var parsedTime;
+
+                var margin2 = { top: 50, right: 0, bottom: 100, left: 30 },
+                width2 = 960 - margin.left - margin.right,
+                height2 = 700 - margin.top - margin.bottom;
+
+                var svg2 = d3.select("#chart2").append("svg")
+                .attr("width", width2 + margin2.left + margin2.right)
+                .attr("height", height2 + margin2.top + margin2.bottom)
+                .attr("class", "graph")
+                .append("g")
+                .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+        // Add header manueltly in the dataset to get going
+        d3.csv("/data/testData_p7.csv", function(data) {
+
+            console.log(data)
+
+            data.forEach(function(d) {
+                var parsedTime = d.time.split(':');
+                console.log(parsedTime)
+                d.time = new Date(1970, 0, 1, parsedTime[0], parsedTime[1],0);
+                console.log(d.time)
+            });
+
+            yScale.domain([minDateTime,maxDateTime]);
+
+            // yScale.domain(d3.extent(data, function(d) {
+            //     return d.time;
+            // }));
+
+            svg2.append("g")
+                .attr("class", "x axis")
+                .attr("id","x-axis")
+                .attr("transform", "translate(" + (margin2.left) + ",0)")
+                .call(xAxis)
+
+
+
+            svg2.append("g")
+                .attr("class", "y axis")
+                .attr("id","y-axis")
+                .attr("transform", "translate(" + (margin2.left) + ",0)")
+                .call(yAxis)
+                .append("text")
+                    .attr("class", "label")
+                    .attr("transform", "rotate(-90)")
+
+                .attr("y", 59)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Best Time (minutes)")
+
+            svg2.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -160)
+                .attr('y', -44)
+                .style('font-size', 18)
+                .text('Time in Minutes');
+
+            svg2.selectAll(".dot")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("transform", "translate(" + (margin2.left) + ",0)")
+                .attr("r", 6)
+                .attr("cx", function(d) {
+                    return xScale(d.weekday);
+                })
+                .attr("cy", function(d) {
+                    return yScale(d.time);
+                })
+                .style("fill", function(d) {           
+                     if (d.value == 1 ) {
+                        return myColor1(d.value); // bad - red
+                    }
+                    if (d.value == 2 ) {
+                            return myColor2(d.value); // good - green
+                        }
+                    if (d.value == 3 ) {
+                        return myColor3(d.value); // med - grey
+                    }
+                })
+                .style("stroke", "#000000");
+
+                // // GRID
+
+                // var row2 = svg2.selectAll(".row")
+                // .data(gridData)
+                // .enter().append("g")
+                // .attr("class", "row");
+
+                // // The GRID
+
+                // const column2 = row2.selectAll(".square")
+                // .data(function(d) { return d; })
+                // .enter().append("rect")
+                // .attr("class","square")
+                // .attr("x", function(d) { return d.x +30; })
+                // .attr("y", function(d) { return d.y; })
+                // .attr("width", function(d) { return d.width; })
+                // .attr("height", function(d) { return d.height; })
+                // .attr("fill-opacity","0")
+                // .style("fill", "#ddd")
+                // .style("stroke", "#222");
+            
+            // return{
+            //     weekday: +data.weekday,
+            //     hour: +data.hour,
+            //     value: +data.value
+            // };
+            // return{
+            //     date: data.date,
+            //     time: data.time,
+            //     weekday: +data.weekday,
+            //     value: +data.value
+            // }
+
+            // data.forEach(function(valueObj){
+            //     valueObj['tie'] = timeFormat(valueObj['time']);
+            //     console.log(valueObj['time']);
+            //     console.log(valueObj['tie']);
+            // });
+            
+            //data.weekday = +data.weekday;
+            //data.hour = +data.hour;
+            //data.value = +data.value;
+
+
+
+        //},
+        //function(error, data){
+            
+            //console.log("hello"+data.date);
+            // Colorscale
+
+        //   const colorScale = d3.scaleQuantile()
+        //     .domain([0, buckets - 1, d3.max(data, (d) => d.value)])
+        //     .range(colors);
+
+          const cards = svggg.selectAll(".hour")
+              .data(data, (d) => d.weekday+':'+(d.time));
+
+          cards.append("title");
+
+           // circles
+           cards.enter().append("circle")
+                .attr("cy", (d) => ((d.time)))
+                .attr("cx", (d) => (d.weekday)*gridSize)
+                .attr("r", 10)
+                .style("fill", "#ffffff")
+                .style("stroke", "#000000");
+                //.merge(cards)
+                //.transition()
+                //.duration(1000)
+                //.style("fill", (d) => colorScale(d.value));
+
+        //   //the calender
+
+        //   cards.enter().append("rect")
+        //       .attr("y", (d) => (d.hour) * gridSize - 310)
+        //       .attr("x", (d) => (d.weekday) * (gridSize + 80)+41)
+        //       //.attr("r",10)
+        //       //.attr("x", (d) => (d.hour) * gridSize)
+        //       //.attr("y", (d) => (d.weekday) * gridSize)
+        //       .attr("rx", 2)
+        //       .attr("ry", 2)
+        //       .attr("class", "hour bordered")
+        //       .attr("width", gridSize+80)
+        //       .attr("height", gridSize/1.5)
+        //       .style("fill", colors[0])
+        //     .merge(cards)
+        //       .transition()
+        //       .duration(1000)
+        //       .style("fill", (d) => colorScale(d.value));
+
+              
+            // The GRID
+
+            const column = row.selectAll(".square")
+                .data(function(d) { return d; })
+                .enter().append("rect")
+                .attr("class","square")
+                .attr("x", function(d) { return d.x +40; })
+                .attr("y", function(d) { return d.y -10; })
+                .attr("width", function(d) { return d.width; })
+                .attr("height", function(d) { return d.height; })
+                .attr("fill-opacity","0")
+                .style("fill", "#ddd")
+                .style("stroke", "#222");
+
+           
+              
+
+
+        //   cards.select("title").text((d) => d.value);
+
+        //   cards.exit().remove();
+
+        //   const legend = svggg.selectAll(".legend")
+        //       .data([0].concat(colorScale.quantiles()), (d) => d);
+
+        //   const legend_g = legend.enter().append("g")
+        //       .attr("class", "legend");
+
+        //   legend_g.append("rect")
+        //     .attr("x", (d, i) => legendElementWidth * i)
+        //     .attr("y", height)
+        //     .attr("width", legendElementWidth)
+        //     .attr("height", gridSize / 2)
+        //     .style("fill", (d, i) => colors[i]);
+
+        //   legend_g.append("text")
+        //     .attr("class", "mono")
+        //     .text((d) => "≥ " + Math.round(d))
+        //     .attr("x", (d, i) => legendElementWidth * i)
+        //     .attr("y", height + gridSize);
+
+        //   legend.exit().remove();
+
+
+          
+            
+        
+
+        //}
+        
+        });
+    
+
+        
+    
+    </script>
+
+</body>
+</html>
