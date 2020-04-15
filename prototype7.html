@@ -15,60 +15,74 @@
 </head>
 <body>
 
-    <h1>Prototype 7</h1>
-    <p>Parkinson</p>
+    <p style="text-align: left; font-size: 10px;">Prototype 7</p>
+    <!-- <p>Parkinson</p> -->
 
-    <div id="chart"></div>
+    <!-- <div id="chart"></div> -->
     <!-- <div id="dataset-picker"> -->
+    <button id="week6" value=/data/week6_pressdata_v2.csv onclick="myFunction(this.value)">Week 6</button>
+    <button id="week7" value=/data/week7_pressdata_v2.csv onclick="myFunction(this.value)">Week 7</button>
+    <button id="week8" value=/data/week8_pressdata_v2.csv onclick="myFunction(this.value)">Week 8</button>
+    <button id="week9" value=/data/week9_pressdata_v2.csv onclick="myFunction(this.value)">Week 9</button>
+    <div id="arrowSlide" style="margin-left: 540px;">
+        <!-- <button id="leftArrow"> < </button>  -->
+        <span id="weekId"></span>
+        <!-- <button id="rightArrow"> > </button> -->
+    </div>
+    <div id="colorScale"></div>
     <div id="chart2"></div>
     <div id="grid"></div>
 
     <script type="text/javascript">
 
-        var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-          width = 960 - margin.left - margin.right,
+            // document.getElementById("week7").onclick = function(){
+	        //     document.getElementById("weekId").text = "Week 7";
+            // }
+
+        var margin = { top: 50, right: 0, bottom: 100, left: 0 },
+          width = 1000 - margin.left - margin.right,
           height = 700 - margin.top - margin.bottom,
-          gridSize = Math.floor(width / 24),
-          legendElementWidth = gridSize*2,
-          buckets = 9,
-          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-          days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-          times = ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
+          gridSize = Math.floor(width / 24);
+          //legendElementWidth = gridSize*2,
+          //buckets = 9,
+          //colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+          //days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+          //times = ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
           //datasets = ["data.tsv", "data2.tsv"];
 
-        var svggg = d3.select("#chart").append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // var svggg = d3.select("#chart").append("svg")
+        //   .attr("width", width + margin.left + margin.right)
+        //   .attr("height", height + margin.top + margin.bottom)
+        //   .append("g")
+        //   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        // left-axis vertical - weekdays
-        var dayLabels = svggg.selectAll(".dayLabel")
-          .data(days)
-          .enter().append("text")
-            .text(function (d) { return d; })
-            .attr("y", -40)
-            .attr("x", function (d, i) { return i * (gridSize + 80)+110; })
-            .style("text-anchor", "middle")
-            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
-        // top-axis horizontal - hours
-        var timeLabels = svggg.selectAll(".timeLabel")
-            .data(times)
-            .enter()
-            .append("text")
-            .text(function(d) { return d; })
-            .attr("y", function(d, i) { return i * (gridSize/1.5)+25; })
-            .attr("x", 0)
-            .style("text-anchor", "end")
-            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+        // // left-axis vertical - weekdays
+        // var dayLabels = svggg.selectAll(".dayLabel")
+        //   .data(days)
+        //   .enter().append("text")
+        //     .text(function (d) { return d; })
+        //     .attr("y", -40)
+        //     .attr("x", function (d, i) { return i * (gridSize + 80)+110; })
+        //     .style("text-anchor", "middle")
+        //     .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+        //     .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+        // // top-axis horizontal - hours
+        // var timeLabels = svggg.selectAll(".timeLabel")
+        //     .data(times)
+        //     .enter()
+        //     .append("text")
+        //     .text(function(d) { return d; })
+        //     .attr("y", function(d, i) { return i * (gridSize/1.5)+25; })
+        //     .attr("x", 0)
+        //     .style("text-anchor", "end")
+        //     .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+        //     .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
 
 
         // the colors
         badColor = "#B22222"        // red
         goodColor = "#32CD32"       // green
-        medicinColor = "#808080"    // grey
+        medicineColor = "#808080"    // grey
 
         // Build color scale - red
         var myColor1 = d3.scaleLinear()
@@ -82,61 +96,61 @@
 
         // Build color scale - grey
         var myColor3 = d3.scaleLinear()
-            .range(["white", medicinColor])
+            .range(["white", medicineColor])
             .domain([0,3])
 
             
-            //grid function
-        function gridData() {
-            var data1 = new Array();
-            var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
-            var ypos = 1;
-            var width = gridSize+80;
-            var height = gridSize/1.5;
-            var click = 0;
+        //     //grid function
+        // function gridData() {
+        //     var data1 = new Array();
+        //     var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
+        //     var ypos = 1;
+        //     var width = gridSize+80;
+        //     var height = gridSize/1.5;
+        //     var click = 0;
             
-            // iterate for rows	
-            for (var row = 0; row < 24; row++) {
-                data1.push( new Array() );
+        //     // iterate for rows	
+        //     for (var row = 0; row < 24; row++) {
+        //         data1.push( new Array() );
                     
-                // iterate for cells/columns inside rows
-                for (var column = 0; column < 7; column++) {
-                    data1[row].push({
-                        x: xpos,
-                        y: ypos,
-                        width: width,
-                        height: height,
-                        click: click
-                    })
-                    // increment the x position. I.e. move it over by 50 (width variable)
-                    xpos += width;
-                }
-                // reset the x position after a row is complete
-                xpos = 1;
-                // increment the y position for the next row. Move it down 50 (height variable)
-                ypos += height;	
-            }
-            return data1;
-        }
+        //         // iterate for cells/columns inside rows
+        //         for (var column = 0; column < 7; column++) {
+        //             data1[row].push({
+        //                 x: xpos,
+        //                 y: ypos,
+        //                 width: width,
+        //                 height: height,
+        //                 click: click
+        //             })
+        //             // increment the x position. I.e. move it over by 50 (width variable)
+        //             xpos += width;
+        //         }
+        //         // reset the x position after a row is complete
+        //         xpos = 1;
+        //         // increment the y position for the next row. Move it down 50 (height variable)
+        //         ypos += height;	
+        //     }
+        //     return data1;
+        // }
 
-        var gridData = gridData();	
-        // quick debugging
-        console.log(gridData);
+        // var gridData = gridData();	
+        // // quick debugging
+        // console.log(gridData);
 
-        // var grid = d3.select("#grid")
-        //     .append("svg")
-        //     .attr("width","510px")
-        //     .attr("height","510px");
+        // // var grid = d3.select("#grid")
+        // //     .append("svg")
+        // //     .attr("width","510px")
+        // //     .attr("height","510px");
             
-        // var row = grid.selectAll(".row")
+        // // var row = grid.selectAll(".row")
+        // //     .data(gridData)
+        // //     .enter().append("g")
+        // //     .attr("class", "row");
+
+        // var row = svggg.selectAll(".row")
         //     .data(gridData)
         //     .enter().append("g")
         //     .attr("class", "row");
-
-        var row = svggg.selectAll(".row")
-            .data(gridData)
-            .enter().append("g")
-            .attr("class", "row");
 
         var timeFormat = d3.timeFormat('%H:%M'),
             dateFormat = d3.timeFormat('%d-%m-%y'),
@@ -191,31 +205,91 @@
 
             // ** X-AXIS **
 
-            var xScale = d3.scaleLinear()
-                .domain([0,7])
-                .rangeRound([0, width]);
+            // var xScale = d3.scaleLinear()
+            //     .domain([0,7])
+            //     .rangeRound([0, width]);
+            
+            // var xAxis = d3.axisTop(xScale)
+            //     .ticks(6)
+            //     //.tickFormat(weekFormat)
+
+            var xScale = d3.scaleBand()
+                //.domain([0,1,2,3,4,5,6])
+                .domain(["Mon","Tue","Wed","Thur", "Fri", "Sat", "Sun"])
+                .range([0, width])
             
             var xAxis = d3.axisTop(xScale)
-                .ticks(6)
-                //.tickFormat(weekFormat)
-        
 
 
-                var parsedTime;
+            var parsedTime;
 
-                var margin2 = { top: 50, right: 0, bottom: 100, left: 30 },
-                width2 = 960 - margin.left - margin.right,
-                height2 = 700 - margin.top - margin.bottom;
+            var margin2 = { top: 50, right: 0, bottom: 100, left: 30 },
+                width2 = 1200 - margin2.left - margin2.right,
+                height2 = 610 - margin2.top - margin2.bottom,
+                gridSize2 = Math.floor(width2 / 24);
 
-                var svg2 = d3.select("#chart2").append("svg")
+            var svg2 = d3.select("#chart2").append("svg")
                 .attr("width", width2 + margin2.left + margin2.right)
                 .attr("height", height2 + margin2.top + margin2.bottom)
                 .attr("class", "graph")
                 .append("g")
                 .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
+            var svgColor = d3.select("#colorScale").append("svg")
+                .attr("width", 200)
+                .attr("height", 50)
+                .attr("class", "graph")
+                .append("g")
+                .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+                //grid function 2
+        function gridData2() {
+            var data1 = new Array();
+            var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
+            var ypos = 1;
+            var width = gridSize2+95;
+            var height = gridSize2/2.1;
+            var click = 0;
+            
+            // iterate for rows	
+            for (var row = 0; row < 24; row++) {
+                data1.push( new Array() );
+                    
+                // iterate for cells/columns inside rows
+                for (var column = 0; column < 7; column++) {
+                    data1[row].push({
+                        x: xpos,
+                        y: ypos,
+                        width: width,
+                        height: height,
+                        click: click
+                    })
+                    // increment the x position. I.e. move it over by 50 (width variable)
+                    xpos += width;
+                }
+                // reset the x position after a row is complete
+                xpos = 1;
+                // increment the y position for the next row. Move it down 50 (height variable)
+                ypos += height;	
+            }
+            return data1;
+        }
+
+        var gridData2 = gridData2();	
+        // quick debugging
+        console.log(gridData2);
+
+        // Create the tooltip
+        d3.select('body').append('div').attr('id', 'tooltip').attr('style', 'position: absolute; opacity: 0;');
+
+        datasets = ["/data/week6_pressdata_v2.csv", "/data/week7_pressdata_v2.csv","/data/week8_pressdata_v2.csv","/data/week9_pressdata_v2.csv"];
+
+            
+
+        const theDataPlot = function(csvFile){
         // Add header manueltly in the dataset to get going
-        d3.csv("/data/testData_p7.csv", function(data) {
+        d3.csv(csvFile, function(data) {
+        //d3.csv("/data/week6_pressdata_v2.csv", function(data) {
 
             console.log(data)
 
@@ -232,12 +306,36 @@
             //     return d.time;
             // }));
 
+
+            // GRID
+
+            var row2 = svg2.selectAll(".row")
+                .data(gridData2)
+                .enter().append("g")
+                .attr("class", "row");
+
+                // The GRID2
+
+                const column2 = row2.selectAll(".square")
+                .data(function(d) { return d; })
+                .enter().append("rect")
+                .attr("class","square")
+                .attr("x", function(d) { return d.x +30; })
+                .attr("y", function(d) { return d.y; })
+                .attr("width", function(d) { return d.width; })
+                .attr("height", function(d) { return d.height; })
+                .attr("fill-opacity","0")
+                .style("fill", "#ddd")
+                .style("stroke", "#d3d3d3");
+            
+
+            // AXIS
+
             svg2.append("g")
                 .attr("class", "x axis")
                 .attr("id","x-axis")
                 .attr("transform", "translate(" + (margin2.left) + ",0)")
                 .call(xAxis)
-
 
 
             svg2.append("g")
@@ -254,12 +352,99 @@
                 .style("text-anchor", "end")
                 .text("Best Time (minutes)")
 
-            svg2.append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('x', -160)
-                .attr('y', -44)
-                .style('font-size', 18)
-                .text('Time in Minutes');
+            svg2.selectAll(".monday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "monday")
+                .attr('x', 80)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 0){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".tuesday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "tuesday")
+                .attr('x', 220)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 1){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".wednesday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "wednesday")
+                .attr('x', 365)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 2){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".thursday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "thursday")
+                .attr('x', 510)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 3){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".friday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "friday")
+                .attr('x', 650)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 4){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".saturday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "saturday")
+                .attr('x', 790)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 5){ 
+                        return d.date
+                    }
+                });
+
+                svg2.selectAll(".sunday")          
+                .data(data)
+                .enter().append("text")
+                .attr("class", "sunday")
+                .attr('x', 935)
+                .attr('y', -30)
+                .style('font-size', 10)
+                .text(function(d) { 
+                    if (d.weekday == 6){ 
+                        return d.date
+                    }
+                });
+
+            
+            // DATA PLOTTET
 
             svg2.selectAll(".dot")
                 .data(data)
@@ -267,8 +452,20 @@
                 .attr("class", "dot")
                 .attr("transform", "translate(" + (margin2.left) + ",0)")
                 .attr("r", 6)
-                .attr("cx", function(d) {
-                    return xScale(d.weekday);
+                // .attr("cx", function(d) {
+                //     return xScale(d.weekday);
+                // })
+                .attr("cx", function(d){
+                    if (d.value == 1 ) {
+                        return xScale(d.week) + 30;
+                    }
+                    if (d.value == 2 ) {
+                        return xScale(d.week) + 110;
+                    }
+                    if (d.value == 3 ) {
+                        return xScale(d.week) + 70;
+                    }
+
                 })
                 .attr("cy", function(d) {
                     return yScale(d.time);
@@ -284,29 +481,92 @@
                         return myColor3(d.value); // med - grey
                     }
                 })
-                .style("stroke", "#000000");
+                .style("stroke", "#000000")
+                .on('mouseover', function(d) {
+                        d3.select('#tooltip')
+                            .transition()
+                            .duration(200)
+                            .style('opacity', 1)
+                            .text("Time: " + formatTime(d.time))
+                            .style("background-color", "white")
+                            .style("border", "solid")
+                            .style("border-width", "2px")
+                            .style("border-radius", "5px")
+                            .style("padding", "5px")
+                            d3.select(this)
+                                .style("stroke-width", "5px")
+                                .attr("r", 12)
 
-                // // GRID
+                    })
+                    .on('mouseout', function() {
+                        d3.select('#tooltip')
+                            .style('opacity', 0)
+                            d3.select(this)
+                                .style("stroke-width", "1px")
+                                .attr("r", 6)
+                    })
+                    .on('mousemove', function() {
+                        d3.select('#tooltip')
+                            .style('left', (d3.event.pageX+10) + 'px')
+                            .style('top', (d3.event.pageY+10) + 'px')
+                    });
 
-                // var row2 = svg2.selectAll(".row")
-                // .data(gridData)
-                // .enter().append("g")
-                // .attr("class", "row");
 
-                // // The GRID
+            // colorscale - red / bad
+            svgColor.selectAll("#colorScale")
+                    .data(badColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", 0)
+                    .attr("cy", -30)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", badColor)
+                svgColor.append('text')
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .text("Bad")
+                    .attr("x", -10)
+                    .attr("y", -10);
 
-                // const column2 = row2.selectAll(".square")
-                // .data(function(d) { return d; })
-                // .enter().append("rect")
-                // .attr("class","square")
-                // .attr("x", function(d) { return d.x +30; })
-                // .attr("y", function(d) { return d.y; })
-                // .attr("width", function(d) { return d.width; })
-                // .attr("height", function(d) { return d.height; })
-                // .attr("fill-opacity","0")
-                // .style("fill", "#ddd")
-                // .style("stroke", "#222");
-            
+                // colorscale - green / good
+                svgColor.selectAll()
+                    .data(goodColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", 45)
+                    .attr("cy", -30)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", goodColor)
+                svgColor.append('text')
+                    .text("Good")
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .attr("x", 30)
+                    .attr("y", -10)
+                    
+                // colorscale - grey / medicin
+                svgColor.selectAll()
+                    .data(medicineColor)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", 90)
+                    .attr("cy", -30)
+                    .attr("r", 5)
+                    //.attr("width", width/24 )
+                    //.attr("height", height/60 )
+                    .style("fill", medicineColor)
+                svgColor.append('text')
+                    .text("Medicine")
+                    .attr("font-family", "sans-serif")
+                    .style("font-size", "10")
+                    .attr("x", 70)
+                    .attr("y", -10) 
+
+                
             // return{
             //     weekday: +data.weekday,
             //     hour: +data.hour,
@@ -341,18 +601,18 @@
         //     .domain([0, buckets - 1, d3.max(data, (d) => d.value)])
         //     .range(colors);
 
-          const cards = svggg.selectAll(".hour")
-              .data(data, (d) => d.weekday+':'+(d.time));
+        //   const cards = svggg.selectAll(".hour")
+        //       .data(data, (d) => d.weekday+':'+(d.time));
 
-          cards.append("title");
+        //   cards.append("title");
 
-           // circles
-           cards.enter().append("circle")
-                .attr("cy", (d) => ((d.time)))
-                .attr("cx", (d) => (d.weekday)*gridSize)
-                .attr("r", 10)
-                .style("fill", "#ffffff")
-                .style("stroke", "#000000");
+        //    // circles
+        //    cards.enter().append("circle")
+        //         .attr("cy", (d) => ((d.time)))
+        //         .attr("cx", (d) => (d.weekday)*gridSize)
+        //         .attr("r", 10)
+        //         .style("fill", "#ffffff")
+        //         .style("stroke", "#000000");
                 //.merge(cards)
                 //.transition()
                 //.duration(1000)
@@ -378,19 +638,19 @@
         //       .style("fill", (d) => colorScale(d.value));
 
               
-            // The GRID
+            // // The GRID
 
-            const column = row.selectAll(".square")
-                .data(function(d) { return d; })
-                .enter().append("rect")
-                .attr("class","square")
-                .attr("x", function(d) { return d.x +40; })
-                .attr("y", function(d) { return d.y -10; })
-                .attr("width", function(d) { return d.width; })
-                .attr("height", function(d) { return d.height; })
-                .attr("fill-opacity","0")
-                .style("fill", "#ddd")
-                .style("stroke", "#222");
+            // const column = row.selectAll(".square")
+            //     .data(function(d) { return d; })
+            //     .enter().append("rect")
+            //     .attr("class","square")
+            //     .attr("x", function(d) { return d.x +40; })
+            //     .attr("y", function(d) { return d.y -10; })
+            //     .attr("width", function(d) { return d.width; })
+            //     .attr("height", function(d) { return d.height; })
+            //     .attr("fill-opacity","0")
+            //     .style("fill", "#ddd")
+            //     .style("stroke", "#222");
 
            
               
@@ -428,7 +688,57 @@
 
         //}
         
-        });
+        })
+        };
+
+        theDataPlot(datasets[0]);
+
+        // const nextDataset = d3.select("#rightArrow")
+        //     .data(datasets)
+        //     .enter()
+            
+        //     .on("click", function(){
+        //         //for ( i = 0; i < datasets.length; i++){
+        //         if (theDataPlot(datasets[0])) {
+        //             theDataPlot(datasets[1])
+        //         } 
+        //         if (theDataPlot(datasets[1])){
+        //             theDataPlot(datasets[2])
+        //         }
+        //         if (theDataPlot(datasets[2])){
+        //             theDataPlot(datasets[3])
+        //         }
+        //         //}
+        //     });
+
+            document.getElementById("weekId").innerHTML = document.getElementById("week6").innerHTML;
+
+            function myFunction(value){
+                svg2.selectAll("*").remove(); // remove all the axis
+                svgColor.selectAll("*").remove();
+                theDataPlot(value);
+
+                if (value == "/data/week6_pressdata_v2.csv"){
+                    document.getElementById("weekId").innerHTML = document.getElementById("week6").innerHTML;
+                }
+
+                if (value == "/data/week7_pressdata_v2.csv"){
+                    document.getElementById("weekId").innerHTML = document.getElementById("week7").innerHTML;
+                }
+
+                if (value == "/data/week8_pressdata_v2.csv"){
+                    document.getElementById("weekId").innerHTML = document.getElementById("week8").innerHTML;
+                }
+
+                if (value == "/data/week9_pressdata_v2.csv"){
+                    document.getElementById("weekId").innerHTML = document.getElementById("week9").innerHTML;
+                }
+
+                
+            }
+
+           
+
     
 
         
