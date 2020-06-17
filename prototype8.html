@@ -19,7 +19,8 @@
     <!-- <input type="file" name="custom-dataset" id="customDataset" onchange="openFile(this.files)" accept=".csv" style="max-width:220px;">  fromt the first example -->
 
     <!-- <div id="output"></div> fromt the first example --> 
-    <p style="text-align: left; font-size: 10px;">Prototype 8<input type="button" id="bt" onclick="print('../sample.pdf')" value="Print PDF" style="float:right" /></p> 
+    <!-- <p style="text-align: left; font-size: 10px;">Prototype 8<input type="button" id="bt" onclick="print('../sample.pdf')" value="Print PDF" style="float:right" /></p> -->
+    <button onclick="window.print()">Print this page</button> 
     
     <!-- <div id="editor"></div>
     <button id="cmd">generate PDF</button> -->
@@ -1746,14 +1747,14 @@
         // return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
     }
 
-    function print(doc) {
-        var objFra = document.createElement('iframe');   // Create an IFrame.
-        objFra.style.visibility = "hidden";    // Hide the frame.
-        objFra.src = doc;                      // Set source.
-        document.body.appendChild(objFra);  // Add the frame to the web page.
-        objFra.contentWindow.focus();       // Set focus.
-        objFra.contentWindow.print();      // Print it.
-    }
+    // function print(doc) {
+    //     var objFra = document.createElement('iframe');   // Create an IFrame.
+    //     objFra.style.visibility = "hidden";    // Hide the frame.
+    //     objFra.src = doc;                      // Set source.
+    //     document.body.appendChild(objFra);  // Add the frame to the web page.
+    //     objFra.contentWindow.focus();       // Set focus.
+    //     objFra.contentWindow.print();      // Print it.
+    // }
 
 
 
