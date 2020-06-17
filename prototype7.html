@@ -20,9 +20,9 @@
 
     <!-- <div id="chart"></div> -->
     <!-- <div id="dataset-picker"> -->
-    <button id="week6" value=/data/week6_pressdata_v2.csv onclick="myFunction(this.value)">Week 6</button>
+    <button id="week6" value=/data/week6_pressdata_v3.csv onclick="myFunction(this.value)">Week 6</button>
     <button id="week7" value=/data/week7_pressdata_v2.csv onclick="myFunction(this.value)">Week 7</button>
-    <button id="week8" value=/data/week8_pressdata_v2.csv onclick="myFunction(this.value)">Week 8</button>
+    <button id="week8" value=/data/week8_pressdata_v3.csv onclick="myFunction(this.value)">Week 8</button>
     <button id="week9" value=/data/week9_pressdata_v2.csv onclick="myFunction(this.value)">Week 9</button>
     <div id="arrowSlide" style="margin-left: 540px;">
         <!-- <button id="leftArrow"> < </button>  -->
@@ -282,18 +282,19 @@
         // Create the tooltip
         d3.select('body').append('div').attr('id', 'tooltip').attr('style', 'position: absolute; opacity: 0;');
 
-        datasets = ["/data/week6_pressdata_v2.csv", "/data/week7_pressdata_v2.csv","/data/week8_pressdata_v2.csv","/data/week9_pressdata_v2.csv"];
+        datasets = ["/data/week6_pressdata_v3.csv", "/data/week7_pressdata_v2.csv","/data/week8_pressdata_v3.csv","/data/week9_pressdata_v2.csv"];
 
-            
+        var myData;    
 
         const theDataPlot = function(csvFile){
         // Add header manueltly in the dataset to get going
         d3.csv(csvFile, function(data) {
         //d3.csv("/data/week6_pressdata_v2.csv", function(data) {
-
-            console.log(data)
+            myData = data;
+            console.log("the data: " + data);
 
             data.forEach(function(d) {
+                console.log("the d: " + d);
                 var parsedTime = d.time.split(':');
                 console.log(parsedTime)
                 d.time = new Date(1970, 0, 1, parsedTime[0], parsedTime[1],0);
@@ -456,7 +457,10 @@
                 //     return xScale(d.weekday);
                 // })
                 .attr("cx", function(d){
+                    console.log("cx d: " + d);
+                    console.log("d.value: " + d.value);
                     if (d.value == 1 ) {
+                        console.log("d.week: " + d.week + " " + typeof(d.week));
                         return xScale(d.week) + 30;
                     }
                     if (d.value == 2 ) {
@@ -468,6 +472,9 @@
 
                 })
                 .attr("cy", function(d) {
+                    console.log("cy d: " + d);
+                    console.log("d.time: " + d.time);
+                    console.log("yScale: " + yScale(d.time));
                     return yScale(d.time);
                 })
                 .style("fill", function(d) {           
@@ -718,7 +725,7 @@
                 svgColor.selectAll("*").remove();
                 theDataPlot(value);
 
-                if (value == "/data/week6_pressdata_v2.csv"){
+                if (value == "/data/week6_pressdata_v3.csv"){
                     document.getElementById("weekId").innerHTML = document.getElementById("week6").innerHTML;
                 }
 
@@ -726,7 +733,7 @@
                     document.getElementById("weekId").innerHTML = document.getElementById("week7").innerHTML;
                 }
 
-                if (value == "/data/week8_pressdata_v2.csv"){
+                if (value == "/data/week8_pressdata_v3.csv"){
                     document.getElementById("weekId").innerHTML = document.getElementById("week8").innerHTML;
                 }
 

@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" href="css-styles.css">
+    <title>Prototype8</title>
+    <!-- D3 VERSION 3 -->
+    <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
+    <!-- D3 VERSION 4 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- D3 VERSION 5 -->
+    <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+    <!-- Load color palettes -->
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+</head>
+<body>
+
+
+    <!-- <input type="file" name="custom-dataset" id="customDataset" onchange="openFile(this.files)" accept=".csv" style="max-width:220px;">  fromt the first example -->
+
+    <!-- <div id="output"></div> fromt the first example --> 
+    <p style="text-align: left; font-size: 10px;">Prototype 8<input type="button" id="bt" onclick="print('../sample.pdf')" value="Print PDF" style="float:right" /></p> 
+    
+    <!-- <div id="editor"></div>
+    <button id="cmd">generate PDF</button> -->
+    <!-- <a href="https://pdf-ace.com/pdfme/" target= "_blank">Save as PDF</a> -->
+
+    <!-- <button id="prev" value=chosenWeek onclick="pressPrev(this.value)">Prev</button> -->
+    <!-- <button id="next" value=chosenWeek onclick="pressNext(this.value)">Next</button> -->
+
+    <!-- <div id="arrowSlide" style="margin-left: 540px;"> -->
+      <!-- <button id="leftArrow"> < </button>  -->
+      <!-- <span id="weekId"></span> -->
+      <!-- <button id="rightArrow"> > </button> -->
+    <!-- </div> --> 
+
+    <div id="inputButton">Upload your tracking-file (.csv file): </div>
+    <div id="lineee">
+        <div id="nextButton"></div>
+
+        <div id="weekText"></div>
+
+        <div id="prevButton"></div>
+
+        <div id="colorScale"></div>
+        
+        
+    </div>
+    <div id="chart2"></div>
+    <div id="grid"></div>
+
+    <script type="text/javascript">
+     
+
+    function getStarted(){
+
+      
+      // UPLOADING THE FILE
+      d3.select("html")
+          .style("height","100%")
+
+      //d3.select("body")
+      d3.select("#inputButton")
+          .style("height","100%")
+          .style("font", "12px sans-serif")
+          .append("input")
+              .attr("type", "file")
+              .attr("accept", ".csv")
+              .style("margin", "5px")
+              .on("change", function() {
+
+                console.log("before remove svg");  
+                svg2.selectAll("*").remove(); // remove all the axis
+                svgColor.selectAll("*").remove();
+                console.log("after remove svg"); 
+
+
+                  var file = d3.event.target.files[0];
+                  if (file) {
+                      var reader = new FileReader();
+                          reader.onloadend = function(evt) {
+                              var dataURL = evt.target.result;
+                              readCSVfromURL(dataURL);
+                      };
+                     reader.readAsDataURL(file);
+                  }
+              })
+    };
+
+    getStarted();
+
+
+      // SET UP VISUALISATION
+    
+      var margin = { top: 50, right: 0, bottom: 100, left: 0 },
+          width = 1000 - margin.left - margin.right,
+          height = 700 - margin.top - margin.bottom,
+          gridSize = Math.floor(width / 24);
+
+      // the colors
+      badColor = "#B22222";        // red
+      goodColor = "#32CD32";       // green
+      medicineColor = "#808080";    // grey
+
+      // Build color scale - red
+      var myColor1 = d3.scaleLinear()
+          .range(["white", badColor])
+          .domain([0,1]);
+
+      // Build color scale - green
+      var myColor2 = d3.scaleLinear()
+          .range(["white", goodColor])
+          .domain([0,2]);
+
+      // Build color scale - grey
+      var myColor3 = d3.scaleLinear()
+          .range(["white", medicineColor])
+          .domain([0,3]);
+                  
+      //var hourFormater = d3.timeFormat("%I:%M"); // ex. 09:30
+      var dateFormat = d3.timeFormat('%d-%m-%y'); // ex. 08-02-2020
+      var weekFormat = d3.timeFormat('%u'); // ex. 6 (1-7 --> Mon-Sun)
+      var weekdayFormat = d3.timeFormat('%a'); // ex. Sun
+      var hourMinuteFormat = d3.timeFormat('%H:%M'); // ex. 22:20 - showing 24 hours
+      
+      var timeFormat3 = d3.timeParse('%Y%m%dT%H:%M:%SZ');  // Without UTC behavior varies across browsers, sometimes coerced to browser local time
+    
+      // ** GETTING THE DOMAIN FOR MINIMUM AND MAXIMUM FOR THE HOURS OF THE DAY - Y-AXIS **
+
+      timeExtent = [{'timestamp':'20200204T00:00:00Z'}, {'timestamp':'20200204T23:59:59Z'}];
+
+      // get the timestamp for timeExtent dataset
+      timeExtent.forEach(function(valueObj){
+          valueObj['tiiime'] = timeFormat3(valueObj['timestamp']);
+          console.log(valueObj['tiiime']);
+      });
+
+      yExtentedTime = d3.extent(timeExtent, function(d) { return hourMinuteFormat(d.tiiime);})
+
+      console.log("Extented time: " + yExtentedTime); // 00:00,23:59
+
+      var newParsedTime1 = yExtentedTime[0].split(':'); // 00,00
+      var newParsedTime2 = yExtentedTime[1].split(':'); // 23,59
+
+      console.log("new parsed: " + newParsedTime1); // 00,00
+      console.log("new parsed: " + newParsedTime2); // 23,59
+
+      minDateTime = new Date(1970, 0, 1, newParsedTime1[0], newParsedTime1[1],0); 
+      maxDateTime = new Date(1970, 0, 1, newParsedTime2[0], newParsedTime2[1],0);
+
+      var formatTime = d3.timeFormat("%H:%M");
+
+      var yScale = d3.scaleTime()
+          .rangeRound([0, height]);
+
+      var yAxis = d3.axisLeft(yScale)
+          .ticks(24) //add line for every 24 value / hour
+          .tickFormat(formatTime)
+
+      var xScale = d3.scaleBand()
+          .domain(["Mon","Tue","Wed","Thu", "Fri", "Sat", "Sun"])
+          .range([0, width]);
+            
+      var xAxis = d3.axisTop(xScale);
+
+      // FOR THE GRID 
+
+      var margin2 = { top: 50, right: 0, bottom: 100, left: 30 },
+                width2 = 1200 - margin2.left - margin2.right,
+                height2 = 610 - margin2.top - margin2.bottom,
+                gridSize2 = Math.floor(width2 / 24);
+
+      var svg2 = d3.select("#chart2").append("svg")
+          .attr("width", width2 + margin2.left + margin2.right)
+          .attr("height", height2 + margin2.top + margin2.bottom)
+          .attr("class", "graph")
+          .append("g")
+          .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+      var svgColor = d3.select("#lineee").append("svg")
+          .attr("width", 1000)
+          .attr("height", 50)
+          .attr("class", "graph")
+          .append("g")
+          .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+    //  var svgButtons = d3.select("#nextButton").append("svg")
+    //       .attr("width",  width2 + margin2.left + margin2.right)
+    //       .attr("height", 50)
+    //       .attr("class", "graph")
+    //       .append("g")
+    //       .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+      //grid function 2
+      function gridData2() {
+          var data1 = new Array();
+          var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
+          var ypos = 1;
+          var width = gridSize2+95;
+          var height = gridSize2/2.1;
+          var click = 0;
+            
+          // iterate for rows	
+          for (var row = 0; row < 24; row++) {
+              data1.push( new Array() );
+                    
+              // iterate for cells/columns inside rows
+              for (var column = 0; column < 7; column++) {
+                  data1[row].push({
+                      x: xpos,
+                      y: ypos,
+                      width: width,
+                      height: height,
+                      click: click
+                  })
+                  // increment the x position. I.e. move it over by 50 (width variable)
+                  xpos += width;
+              }
+              // reset the x position after a row is complete
+              xpos = 1;
+              // increment the y position for the next row. Move it down 50 (height variable)
+              ypos += height;	
+          }
+          return data1;
+      }
+      
+      var gridData2 = gridData2();	
+      // quick debugging
+      console.log(gridData2);
+      // Create the tooltip
+      d3.select('body').append('div').attr('id', 'tooltip').attr('style', 'position: absolute; opacity: 0;');
+
+
+      /// ------------------ ///
+
+      // GRID
+
+      var row2 = svg2.selectAll(".row")
+          .data(gridData2)
+          .enter().append("g")
+          .attr("class", "row");
+
+      // The GRID2
+
+      const column2 = row2.selectAll(".square")
+            .data(function(d) { return d; })
+            .enter().append("rect")
+            .attr("class","square")
+            .attr("x", function(d) { return d.x +30; })
+            .attr("y", function(d) { return d.y; })
+            .attr("width", function(d) { return d.width; })
+            .attr("height", function(d) { return d.height; })
+            .attr("fill-opacity","0")
+            .style("fill", "#ddd")
+            .style("stroke", "#d3d3d3");
+
+
+      /// ----------------
+
+      var data;
+      var observations;
+      
+      var obs_week = [];
+      var chosenWeek;
+                    
+      
+
+      function readCSVfromURL(url) {
+          d3.text(url, function(error, t) {
+              if (error) {
+                  // simple error handling
+                  document.write("Error reading data file.");
+              } else {
+
+                // GRID
+                var row2 = svg2.selectAll(".row")
+                    .data(gridData2)
+                    .enter().append("g")
+                    .attr("class", "row");
+
+                // The GRID2
+
+                const column2 = row2.selectAll(".square")
+                    .data(function(d) { return d; })
+                    .enter().append("rect")
+                    .attr("class","square")
+                    .attr("x", function(d) { return d.x +30; })
+                    .attr("y", function(d) { return d.y; })
+                    .attr("width", function(d) { return d.width; })
+                    .attr("height", function(d) { return d.height; })
+                    .attr("fill-opacity","0")
+                    .style("fill", "#ddd")
+                    .style("stroke", "#d3d3d3");
+                  
+                  
+                // !!! - SPLITTING UP BY PRESSES ONE, TWO OR THREE TIMES - !!!
+
+                  // data = d3.csvParseRows(t, parseData);
+                  // observations = [];
+                  
+                  // // produce inline HTML with all data points
+                  // let output_raw = '<pre>Number of button activations in dataset: ' + data.length + '<br><p></p>';
+                  // let threshold = 5000;  // 5000 ms = 5 seconds
+                  // let i = 0;
+                  // while (i < data.length) {
+                  //     //console.log("Difference between weeks " + data)
+                  //     //console.log("Day: " + data[190].dateString +" Week: " + data[190].week); // get the number of the weekday
+                  //     //console.log("Day: " + data[91].dateString +" Week: " + data[91].week); // get the number of the weekday
+                  //     //console.log(data[0]);
+                  //     let press = 1;
+                  //     while (i+press < data.length && (data[parseInt(i + press)].localtime.getTime() - data[parseInt(i+press-1)].localtime.getTime()) <= threshold) {
+                  //         press++;
+                  //     }
+
+                  //     //output_raw += `${prependZero(Number(i),5)}\t${press}\t${data[i].localtime.toString().substring(0,34)}<br>`;
+                  //     // create array for observations if it has not been initialized
+                  //     if (observations[press] == null) {
+                  //         observations[press] = [];
+                  //     }
+                  //     // add to array of observations
+                  //     observations[press].push(data[i].localtime);
+                  //     i = i + press;
+                  //     //console.log("Observations: " + observations);
+                  // }
+                  // // generate output for each press with observation
+                  // for (o in observations) {
+                  //     output_raw += `<p>Observations with ${o} button presses: ${observations[o].length}</p>`;
+                  //     for (oo in observations[o]) {
+                  //         output_raw += `${observations[o][oo].toString().substring(0,34)}<br>`;
+                  //     }
+                  // }
+                  // output_raw += '</pre>';
+                  // d3.select("div#data").html(output_raw);
+
+                  // SPLITTING UP BY WEEK
+                  data_week = d3.csvParseRows(t, parseData);
+                  observations_week = [];
+                //   obs_week = [];
+
+                  //let output_raw_week = '<pre>Number of button activations in dataset: ' + data_week.length + '<br><p></p>';
+                  let j = 0; 
+                  while (j < data_week.length) {
+                    
+                      //console.log("Difference between weeks " + data)
+                      //console.log("Day: " + data_week[190].dateString +" Week: " + data_week[190].week); // get the number of the weekday
+                      //console.log("Hej diff: " + (data_week[256].week - data_week[255].week));
+                      //console.log("Before while-loop and count");
+                      let count = 1;
+                      let theWeek = 0;
+                      //console.log("Before while-loop and after count: " + count);
+                      //console.log("data week : " + data_week[parseInt(j+count-1)].localtime.getTime());
+                      console.log("data week : " + data_week[parseInt(1)].week);
+                      if (j+count < data_week.length && (data_week[parseInt(j+count)].week) == (data_week[parseInt(j+count-1)].week) ){
+                      //while (j+press_ < data_week.length && (data_week[parseInt(j+press_)].week) - (data_week[parseInt(j+press_-1)].week) == 0 ){ // while week 6 - week 6 = 0 - so while it is still the same week
+                            //console.log(data_week[parseInt(j+press_).week]);  
+                            //console.log("Yay week is the same");
+                            //console.log("Day: "+ data_week[parseInt(j+count)].dateString +" Week: " + data_week[parseInt(j+count)].week);
+                            theWeek = data_week[parseInt(j+count)].week;
+                            //console.log("count : " + count); 
+                      }
+                      //console.log("Out of the while-loop of week")
+                      // if current week is not equal preview week - set week as preview week ?
+                      theWeek = data_week[parseInt(j+count-1)].week;
+
+                      if(obs_week[theWeek] == null){
+                        obs_week[theWeek] = [];
+                      }
+                      
+                      obs_week[theWeek].push(data_week[j].localtime); // push that current data into that week array
+                      //count++;
+                      j = j + count;
+
+                  }
+                  console.log("out of while-loop data_week.lenght");
+
+                  console.log("obs_week: " + obs_week);
+                  console.log("type of obs_week: " + typeof(obs_week)); // object
+                  console.log("object keys?: " + Object.keys(obs_week)[0]); // return 6
+                  console.log("object keys22?: " + Object.keys(obs_week)[0]+1); // return 61
+                  console.log("object keys33?: " + Object.keys(obs_week)[+1]); // return 7
+                  console.log("object keys?: " + Object.keys(obs_week)[0+1]); // return 7
+                  console.log("data object key: " + obs_week[Object.keys(obs_week)[0]]); // data from week 6 / the first week in array-list/object list
+
+                  chosenWeek = Object.keys(obs_week);
+
+                  firstWeek(chosenWeek);
+
+                  function firstWeek(week){
+                      chosenWeek = week[0];
+                  }
+
+                  var nn = 0;
+
+                function pressNext(week){
+                    console.log("the length of week: " + Object.keys(obs_week).length);
+                    console.log("nn before: " + nn);
+
+                    if (nn < Object.keys(obs_week).length-1){
+                        nn = nn + 1;
+                    }
+
+
+                    console.log("nn after: " + nn);
+                    console.log("into pressNext function")
+                    //if ( week[+1] != undefined){
+                        console.log("before: add " + chosenWeek);
+                        console.log("next week")
+                        chosenWeek = week[nn];
+                        console.log("after add " + chosenWeek);
+
+                        svgColor.selectAll("*").remove();
+                        svg2.selectAll(".monday").remove();
+                        svg2.selectAll(".tuesday").remove();
+                        svg2.selectAll(".wednesday").remove();
+                        svg2.selectAll(".thursday").remove();
+                        svg2.selectAll(".friday").remove();
+                        svg2.selectAll(".saturday").remove();
+                        svg2.selectAll(".sunday").remove();
+                        svg2.selectAll(".dot").remove();
+                        
+
+                        yScale.domain([minDateTime,maxDateTime]);
+
+                        svgColor.selectAll("#weekText .weekText")
+                            .attr("class", "weekText")
+                        svgColor.append("text")
+                            .attr('x', (1000)/2)
+                            .attr('y', -20)
+                            .text("Week " + chosenWeek);
+
+
+                        // AXIS
+
+
+                        svg2.append("g")
+                              .attr("class", "x axis")
+                              .attr("id","x-axis")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .call(xAxis)
+
+
+                          svg2.append("g")
+                              .attr("class", "y axis")
+                              .attr("id","y-axis")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .call(yAxis)
+                              .append("text")
+                                  .attr("class", "label")
+                                  .attr("transform", "rotate(-90)")
+
+                              .attr("y", 59)
+                              .attr("dy", ".71em")
+                              .style("text-anchor", "end")
+                              .text("Best Time (minutes)")
+
+                          svg2.selectAll(".monday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "monday")
+                              .attr('x', 80)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 1){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".tuesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "tuesday")
+                              .attr('x', 220)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 2){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".wednesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "wednesday")
+                              .attr('x', 365)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 3){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".thursday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "thursday")
+                              .attr('x', 510)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 4){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".friday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "friday")
+                              .attr('x', 650)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 5){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".saturday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "saturday")
+                              .attr('x', 790)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 6){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".sunday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "sunday")
+                              .attr('x', 935)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 7){
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                        
+
+                        // !!! - SPLITTING UP BY PRESSES ONE, TWO OR THREE TIMES - !!!
+
+                        obs_press = [];
+                        obs = [];
+                        let threshold_press = 5000;
+                        let l = 0;
+
+                        while(l < obs_week[chosenWeek].length){
+
+                          thePress = 1;
+
+                          while(l+thePress < obs_week[chosenWeek].length && (obs_week[chosenWeek][parseInt(l + thePress)].getTime() - obs_week[chosenWeek][parseInt(l+thePress-1)].getTime()) <= threshold_press){
+                            thePress++;
+                          }
+
+                          if (obs_press[thePress] == null) {
+                            obs_press[thePress] = [];
+                          }
+
+                          obs_press[thePress].push(obs_week[chosenWeek][l] );
+                          var o = { 
+                            time: obs_week[chosenWeek][l],
+                            value: thePress 
+                          };
+                          console.log("the o " + o);  
+                          obs.push(o);
+
+                          l = l + thePress;
+                          
+
+                        }
+                          // DATA PLOTTET
+
+                          svg2.selectAll(".dot")
+                              .data(obs)
+                              .enter().append("circle")
+                              .attr("class", "dot")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .attr("r", 6)
+                              .attr("cx", function(d){
+                                  if (d.value == 1) {
+                                      return xScale(weekdayFormat(d.time)) + 30;
+                                  }
+                                  if (d.value == 2) {
+                                      return xScale(weekdayFormat(d.time)) + 110;
+                                  }
+                                  if (d.value == 3) {
+                                      return xScale(weekdayFormat(d.time)) + 70;
+                                  }
+                              })
+                              .attr("cy", function(d) {
+                                  return yScale(new Date(1970, 0, 1, d.time.getHours(), d.time.getMinutes(),0));
+                              })
+                              .style("fill", function(d) {           
+                                  if (d.value == 1) {
+                                      return myColor1(d.value); // bad - red
+                                  }
+                                  if (d.value == 2 ) {
+                                          return myColor2(d.value); // good - green
+                                      }
+                                  if (d.value == 3) {
+                                      return myColor3(d.value); // med - grey
+                                  }
+                              })
+                              .style("stroke", "#000000")
+                              .on('mouseover', function(d) {
+                                      d3.select('#tooltip')
+                                          .transition()
+                                          .duration(200)
+                                          .style('opacity', 1)
+                                          .text("Time: " + hourMinuteFormat(d.time) + " and Date: " + dateFormat(d.time) + " the d " + d.time)
+                                          .style("background-color", "white")
+                                          .style("border", "solid")
+                                          .style("border-width", "2px")
+                                          .style("border-radius", "5px")
+                                          .style("padding", "5px")
+                                          d3.select(this)
+                                              .style("stroke-width", "5px")
+                                              .attr("r", 12)
+
+                                  })
+                                  .on('mouseout', function() {
+                                      d3.select('#tooltip')
+                                          .style('opacity', 0)
+                                          d3.select(this)
+                                              .style("stroke-width", "1px")
+                                              .attr("r", 6)
+                                  })
+                                  .on('mousemove', function() {
+                                      d3.select('#tooltip')
+                                          .style('left', (d3.event.pageX+10) + 'px')
+                                          .style('top', (d3.event.pageY+10) + 'px')
+                                  });
+
+                                                                    // colorscale - red / bad
+                        svgColor.selectAll("#colorScale")
+                                .data(badColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 0)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", badColor)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("Bad")
+                                .attr("x", -10)
+                                .attr("y", -10);
+
+                            // colorscale - grey / medicin
+                            svgColor.selectAll()
+                                .data(medicineColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 45)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", medicineColor)
+                            svgColor.append('text')
+                                .text("Medicine")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 25)
+                                .attr("y", -10)
+
+
+                            // colorscale - green / good
+                            svgColor.selectAll()
+                                .data(goodColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 93)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", goodColor)
+                            svgColor.append('text')
+                                .text("Good")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 80)
+                                .attr("y", -10) 
+
+                svgColor.selectAll("#nextButton")
+                
+                svgColor.append("rect")
+                    .attr("x", 591)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                        .text('NEXT')
+                        .attr('x', ((1000)/2)+100)
+                        .attr('y', -20)
+                        .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                        })
+                        .on('mouseout', function(d) {
+                            d3.select(this)
+                                .style("cursor", "default");
+                        })
+                        .on('click', function() {
+                            console.log('heeej')
+                            pressNext(Object.keys(obs_week))
+                        });
+
+                
+                svgColor.selectAll("#prevButton")
+                svgColor.append("rect")
+                    .attr("x", 390)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                    .text('PREV')
+                    .style("fill", "black")
+                    .attr('x', ((1000)/2)-100)
+                    .attr('y', -20)
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                    .on('click', function() {
+                        console.log('heeej')
+                        pressPrev(Object.keys(obs_week))
+                    });
+
+                    //}                   
+                 }
+
+                function pressPrev(week){
+
+                    console.log("nn before: " + nn);
+
+                    if ( nn > 0){
+                        nn = nn - 1;
+                    }
+                    console.log("nn after: " + nn);
+                    console.log("before: add " + chosenWeek);
+                    console.log("next week")
+                    chosenWeek = week[nn];
+                    console.log("after add " + chosenWeek);
+
+                    // removing previous week for adding the new week on the calendar
+                    svgColor.selectAll("*").remove();
+                    svg2.selectAll(".monday").remove();
+                    svg2.selectAll(".tuesday").remove();
+                    svg2.selectAll(".wednesday").remove();
+                    svg2.selectAll(".thursday").remove();
+                    svg2.selectAll(".friday").remove();
+                    svg2.selectAll(".saturday").remove();
+                    svg2.selectAll(".sunday").remove();
+                    svg2.selectAll(".dot").remove();
+                        
+
+                    yScale.domain([minDateTime,maxDateTime]);
+
+                        
+
+                    svgColor.selectAll("#weekText .week")
+                    svgColor.append("text")
+                        .attr('x', (1000)/2)
+                        .attr('y', -20)
+                        .text("Week " + chosenWeek);
+
+                     // AXIS
+                    svg2.append("g")
+                        .attr("class", "x axis")
+                        .attr("id","x-axis")
+                        .attr("transform", "translate(" + (margin2.left) + ",0)")
+                        .call(xAxis)
+
+
+                          svg2.append("g")
+                              .attr("class", "y axis")
+                              .attr("id","y-axis")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .call(yAxis)
+                              .append("text")
+                                  .attr("class", "label")
+                                  .attr("transform", "rotate(-90)")
+
+                              .attr("y", 59)
+                              .attr("dy", ".71em")
+                              .style("text-anchor", "end")
+                              .text("Best Time (minutes)")
+
+                          svg2.selectAll(".monday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "monday")
+                              .attr('x', 80)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 1){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".tuesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "tuesday")
+                              .attr('x', 220)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 2){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".wednesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "wednesday")
+                              .attr('x', 365)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 3){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".thursday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "thursday")
+                              .attr('x', 510)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 4){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".friday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "friday")
+                              .attr('x', 650)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 5){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".saturday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "saturday")
+                              .attr('x', 790)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 6){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".sunday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "sunday")
+                              .attr('x', 935)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 7){
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                        
+
+                        // !!! - SPLITTING UP BY PRESSES ONE, TWO OR THREE TIMES - !!!
+
+                        obs_press = [];
+                        obs = [];
+                        let threshold_press = 5000;
+                        let l = 0;
+
+                        while(l < obs_week[chosenWeek].length){
+
+                          thePress = 1;
+
+                          while(l+thePress < obs_week[chosenWeek].length && (obs_week[chosenWeek][parseInt(l + thePress)].getTime() - obs_week[chosenWeek][parseInt(l+thePress-1)].getTime()) <= threshold_press){
+                            thePress++;
+                          }
+
+                          if (obs_press[thePress] == null) {
+                            obs_press[thePress] = [];
+                          }
+
+                          obs_press[thePress].push(obs_week[chosenWeek][l] );
+                          var o = { 
+                            time: obs_week[chosenWeek][l],
+                            value: thePress 
+                          };
+                          console.log("the o " + o);  
+                          obs.push(o);
+
+                          l = l + thePress;
+                          
+
+                        }
+                          // DATA PLOTTET
+
+                          svg2.selectAll(".dot")
+                              .data(obs)
+                              .enter().append("circle")
+                              .attr("class", "dot")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .attr("r", 6)
+                              .attr("cx", function(d){
+                                  if (d.value == 1) {
+                                      return xScale(weekdayFormat(d.time)) + 30;
+                                  }
+                                  if (d.value == 2) {
+                                      return xScale(weekdayFormat(d.time)) + 110;
+                                  }
+                                  if (d.value == 3) {
+                                      return xScale(weekdayFormat(d.time)) + 70;
+                                  }
+                              })
+                              .attr("cy", function(d) {
+                                  return yScale(new Date(1970, 0, 1, d.time.getHours(), d.time.getMinutes(),0));
+                              })
+                              .style("fill", function(d) {           
+                                  if (d.value == 1) {
+                                      return myColor1(d.value); // bad - red
+                                  }
+                                  if (d.value == 2 ) {
+                                          return myColor2(d.value); // good - green
+                                      }
+                                  if (d.value == 3) {
+                                      return myColor3(d.value); // med - grey
+                                  }
+                              })
+                              .style("stroke", "#000000")
+                              .on('mouseover', function(d) {
+                                      d3.select('#tooltip')
+                                          .transition()
+                                          .duration(200)
+                                          .style('opacity', 1)
+                                          .text("Time: " + hourMinuteFormat(d.time) + " and Date: " + dateFormat(d.time) + " the d " + d.time)
+                                          .style("background-color", "white")
+                                          .style("border", "solid")
+                                          .style("border-width", "2px")
+                                          .style("border-radius", "5px")
+                                          .style("padding", "5px")
+                                          d3.select(this)
+                                              .style("stroke-width", "5px")
+                                              .attr("r", 12)
+
+                                  })
+                                  .on('mouseout', function() {
+                                      d3.select('#tooltip')
+                                          .style('opacity', 0)
+                                          d3.select(this)
+                                              .style("stroke-width", "1px")
+                                              .attr("r", 6)
+                                  })
+                                  .on('mousemove', function() {
+                                      d3.select('#tooltip')
+                                          .style('left', (d3.event.pageX+10) + 'px')
+                                          .style('top', (d3.event.pageY+10) + 'px')
+                                  });
+
+                                  // colorscale - red / bad
+                        svgColor.selectAll("#colorScale")
+                                .data(badColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 0)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", badColor)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("Bad")
+                                .attr("x", -10)
+                                .attr("y", -10);
+
+                            // colorscale - grey / medicin
+                            svgColor.selectAll()
+                                .data(medicineColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 45)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", medicineColor)
+                            svgColor.append('text')
+                                .text("Medicine")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 25)
+                                .attr("y", -10)
+
+
+                            // colorscale - green / good
+                            svgColor.selectAll()
+                                .data(goodColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 93)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", goodColor)
+                            svgColor.append('text')
+                                .text("Good")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 80)
+                                .attr("y", -10) 
+
+                svgColor.selectAll("#nextButton")
+                svgColor.append("rect")
+                    .attr("x", 591)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                        .text('NEXT')
+                        .attr('x', ((1000)/2)+100)
+                        .attr('y', -20)
+                        .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                        })
+                        .on('mouseout', function(d) {
+                            d3.select(this)
+                                .style("cursor", "default");
+                        })
+                        .on('click', function() {
+                            console.log('heeej')
+                            pressNext(Object.keys(obs_week))
+                        });
+
+                
+                svgColor.selectAll("#prevButton")
+                svgColor.append("rect")
+                    .attr("x", 390)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                    .text('PREV')
+                    .style("fill", "black")
+                    .attr('x', ((1000)/2)-100)
+                    .attr('y', -20)
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                    .on('click', function() {
+                        console.log('heeej')
+                        pressPrev(Object.keys(obs_week))
+                    });
+
+
+                    // if (week[-1] != undefined){
+                    //     console.log("prex week")
+                    //     chosenWeek = week[-1];
+
+
+                    // }
+                }
+
+                svgColor.selectAll("#nextButton")
+                svgColor.append("rect")
+                    .attr("x", 591)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                        .text('NEXT')
+                        .attr('x', ((1000)/2)+100)
+                        .attr('y', -20)
+                        .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                        })
+                        .on('mouseout', function(d) {
+                            d3.select(this)
+                                .style("cursor", "default");
+                        })
+                        .on('click', function() {
+                            console.log('heeej')
+                            pressNext(Object.keys(obs_week))
+                        });
+
+                svgColor.selectAll("#prevButton")
+                svgColor.append("rect")
+                    .attr("x", 390)
+                    .attr("y", -40)
+                    .attr("width", 60)
+                    .attr("height", 30)
+                    .style("fill", "#F5F5F5")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1")
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                svgColor.append('text')
+                    .text('PREV')
+                    .style("fill", "black")
+                    .attr('x', ((1000)/2)-100)
+                    .attr('y', -20)
+                    .on('mouseover', function(d) {
+                        d3.select(this)
+                            .style("cursor", "pointer");
+                    })
+                    .on('mouseout', function(d) {
+                        d3.select(this)
+                            .style("cursor", "default");
+                    })
+                    .on('click', function() {
+                        console.log('heeej')
+                        pressPrev(Object.keys(obs_week))
+                    });
+
+
+
+                //   var chosenWeek;
+                    
+                //   chosenWeek = Object.keys(obs_week);
+
+                //   chooseWeekFunc(chosenWeek);
+
+                //   function chooseWeekFunc(week){
+                    
+                //     if (week[0] != undefined){
+                //         chosenWeek = week[0]
+                //     }
+
+                //     if (id == next){
+                //       if ( week[+1] != undefined){
+                //         chosenWeek = week[+1];
+                //      } 
+                //     }
+
+                //     if (id == prex){
+                //       if ( week[-1] != undefined){
+                //         chosenWeek = week[-1];
+                //      } 
+                //     }
+
+                //     // if (week[0]) {
+                //     //     chosenWeek == week[0]
+                //     // }       
+                //   }
+
+
+                  //console.dir("value: " + obs_week);
+                  //console.log(typeof obs_week);
+                  //for (ow in obs_week) { // ow - what week number it is
+                      //console.log("OBSER:" + obs_week[ow]); // ow - what week it is
+                      //console.log("The week: " + obs_week[ow]);
+                      //console.log(typeof obs_week[ow]); // objects
+                      //console.log("hello " + obs_week[ow][0]);
+                      //output_raw_week += `<p>Observations with week ${ow} </p>`;
+                      //for (oow in obs_week[ow]) { // oow - what data (or timestamp) it is
+                          //output_raw_week += `${obs_week[ow][oow].toString().substring(0,34)}<br>`; 
+                          //console.log("The data: " + obs_week[ow][oow]);
+                          //console.log(typeof obs_week[ow][oow]);
+                          //console.log("hello2 " + obs_week[ow][oow][0]);
+                      //}
+                  //}
+                  //output_raw_week += '</pre>';
+                  //d3.select("div#data2").html(output_raw_week);
+                  
+                  //obs_week.forEach(element => console.log(element));
+
+                  // ---------------------------------------- ---------------------------------------- //
+                  // ---------------------------------------- ---------------------------------------- //
+                  // ---------------------------------------- ---------------------------------------- //
+                  // console.log("before length: " + obs_week.length);
+                  // for(var ii = 0; ii < obs_week.length; ++ii){
+                  //   console.log(obs_week[ii]);
+                  //   if(obs_week[ii] == null){
+                  //     obs_week.splice(ii,1);
+                  //   }
+                  // }
+                  // console.log("after length: " + obs_week.length);
+                  
+                  // removing empty arrays
+                  // var obs_week = obs_week.filter(function (el) {
+                  //   return el != null;
+                  // });
+                  // console.log(obs_week);
+
+                  //console.log("index??: " + obs_week[0]);
+
+                  // for (k in obs_week){
+                  //   //console.log(obs_week);
+                  //   if (k != 0){
+                  //     console.log(obs_week[k]);
+                  //     console.log(k);
+                  //       console.log("lenght of?: " + obs_week.length);
+                  //       console.log("length: " + obs_week[k].length); // example: 91
+
+                  //       obs_week[k].forEach(function(d){
+                  //          console.log("the d :" + d); // example: Sun Feb 09 2020 09:47:24 GMT+0100
+                  //          console.log("type: " + typeof(d)); // type: opject
+                  //          console.log("the date: " + d.getDate()); // example: 9
+
+                           
+                  //          console.log(hourFormater(d)); // getting the time ex. 09:30                           
+                  //          console.log(dateFormat(d)); // getting the date ex. 17-02-2020                           
+                  //          console.log(weekFormat(d)); // getting the number of week ex. 6 (1-7 --> mon-sun)                       
+                  //          console.log(weekdayFormat(d)); // getting the weekday ex. Sun
+                  //          console.log("type of weekdayFormat: " + typeof(weekdayFormat(d)));
+                  //          console.log("type of hourFormater: " + typeof(hourFormater(d)));
+                  //       });
+
+                    
+                        yScale.domain([minDateTime,maxDateTime]);
+
+                        svgColor.selectAll("#weekText .week")
+                        svgColor.append("text")
+                            .attr('x', (1000)/2)
+                            .attr('y', -20)
+                            .text("Week " + chosenWeek);
+
+                        // AXIS
+
+
+                        svg2.append("g")
+                              .attr("class", "x axis")
+                              .attr("id","x-axis")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .call(xAxis)
+
+
+                          svg2.append("g")
+                              .attr("class", "y axis")
+                              .attr("id","y-axis")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .call(yAxis)
+                              .append("text")
+                                  .attr("class", "label")
+                                  .attr("transform", "rotate(-90)")
+
+                              .attr("y", 59)
+                              .attr("dy", ".71em")
+                              .style("text-anchor", "end")
+                              .text("Best Time (minutes)")
+
+                          svg2.selectAll(".monday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "monday")
+                              .attr('x', 80)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 1){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".tuesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "tuesday")
+                              .attr('x', 220)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 2){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".wednesday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "wednesday")
+                              .attr('x', 365)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 3){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".thursday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "thursday")
+                              .attr('x', 510)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 4){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".friday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "friday")
+                              .attr('x', 650)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 5){ 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".saturday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "saturday")
+                              .attr('x', 790)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 6){ 
+                                      //console.log("saturday:" + ddd);
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                              svg2.selectAll(".sunday")          
+                              .data(obs_week[chosenWeek])
+                              .enter().append("text")
+                              .attr("class", "sunday")
+                              .attr('x', 935)
+                              .attr('y', -30)
+                              .style('font-size', 10)
+                              .text(function(ddd) { 
+                                  if (weekFormat(ddd) == 7){
+                                      //console.log("YES SUNDAY" + ddd); 
+                                      return dateFormat(ddd);
+                                  }
+                              });
+
+                        
+
+                        // !!! - SPLITTING UP BY PRESSES ONE, TWO OR THREE TIMES - !!!
+
+                        obs_press = [];
+                        obs = [];
+                        let threshold_press = 5000;
+                        let l = 0;
+
+                        while(l < obs_week[chosenWeek].length){
+
+                          thePress = 1;
+
+                          //console.log("daaaata: " + obs_week[6][1].getTime());
+
+                          //console.log("le data: " + obs_week[k][parseInt(l + thePress)].getTime());
+
+                          while(l+thePress < obs_week[chosenWeek].length && (obs_week[chosenWeek][parseInt(l + thePress)].getTime() - obs_week[chosenWeek][parseInt(l+thePress-1)].getTime()) <= threshold_press){
+                            thePress++;
+                          }
+
+                          if (obs_press[thePress] == null) {
+                            obs_press[thePress] = [];
+                          }
+
+                          obs_press[thePress].push(obs_week[chosenWeek][l] );
+                          var o = { 
+                            time: obs_week[chosenWeek][l],
+                            value: thePress 
+                          };
+                          //o.time = obs_week[6][l];
+                          //o.value = thePress;
+                          console.log("the o " + o);  
+                          obs.push(o);
+
+                          l = l + thePress;
+                          
+
+                        }
+
+                        
+
+                        
+                        //for (loo in obs_press){
+                          // console.log("pressssss number: " + loo);
+                          // console.log("the type of press number: " + typeof(parseInt(loo))); // a string
+                          // console.log("the presses: " + obs_press[loo] );
+                          // console.log("the presses length: " + obs_press[loo].length );
+
+                          // obs_press[loo].forEach(function(d){
+                          //   console.log("index: " + d);
+
+                          // });
+
+
+
+                          // DATA PLOTTET
+
+                          svg2.selectAll(".dot")
+                              .data(obs)
+                              .enter().append("circle")
+                              .attr("class", "dot")
+                              .attr("transform", "translate(" + (margin2.left) + ",0)")
+                              .attr("r", 6)
+                              // .attr("cx", function(d) {
+                              //     return xScale(weekdayFormat(d));
+                              // })
+                              .attr("cx", function(d){
+                                  //console.log("before if loo: " + loo);
+                                  //console.log("cx the d: " + d.time);
+                                  if (d.value == 1) {
+                                      //console.log("cx loo 1: " + loo + " " + dateFormat(d));
+                                      //console.log("d.week: " + weekdayFormat(d) + " " + typeof(weekdayFormat(d)));
+                                      //console.log("weekday: " + weekdayFormat(d) + " " + xScale(weekdayFormat(d)) +" type of weekdayFormat " + typeof(weekdayFormat(d)) );
+                                      //console.log("xScale: " + xScale(weekdayFormat(d.time)) );
+                                      return xScale(weekdayFormat(d.time)) + 30;
+                                  }
+                                  if (d.value == 2) {
+                                      //console.log("cx loo 2: " + loo);
+                                      return xScale(weekdayFormat(d.time)) + 110;
+                                  }
+                                  if (d.value == 3) {
+                                    //console.log("cx loo 3: " + loo);
+                                      return xScale(weekdayFormat(d.time)) + 70;
+                                  }
+
+                              })
+                              .attr("cy", function(d) {
+                                  //console.log("cy the d: " + d);
+                                  //console.log("cy hour: " + hourMinuteFormat(d));
+                                  //console.log("cy d: " + d.time);
+                                  
+                                 
+                                    //var parsedTime = d.time.split(':');
+                                    //console.log(parsedTime);
+                                    //d.time = new Date(1970, 0, 1, d.time.getHours(), d.time.getMinutes(),0);
+                                    //console.log(d.time);
+                                    //console.log("yScale: " + yScale(d.time));
+
+                                  return yScale(new Date(1970, 0, 1, d.time.getHours(), d.time.getMinutes(),0));
+                              })
+                              .style("fill", function(d) {           
+                                  if (d.value == 1) {
+                                    //console.log("fill loo 1: " + loo);
+                                      return myColor1(d.value); // bad - red
+                                  }
+                                  if (d.value == 2 ) {
+                                          return myColor2(d.value); // good - green
+                                      }
+                                  if (d.value == 3) {
+                                      return myColor3(d.value); // med - grey
+                                  }
+                              })
+                              .style("stroke", "#000000")
+                              .on('mouseover', function(d) {
+                                      d3.select('#tooltip')
+                                          .transition()
+                                          .duration(200)
+                                          .style('opacity', 1)
+                                          .text("Time: " + hourMinuteFormat(d.time) + " and Date: " + dateFormat(d.time) + " the d " + d.time)
+                                          .style("background-color", "white")
+                                          .style("border", "solid")
+                                          .style("border-width", "2px")
+                                          .style("border-radius", "5px")
+                                          .style("padding", "5px")
+                                          d3.select(this)
+                                              .style("stroke-width", "5px")
+                                              .attr("r", 12)
+
+                                  })
+                                  .on('mouseout', function() {
+                                      d3.select('#tooltip')
+                                          .style('opacity', 0)
+                                          d3.select(this)
+                                              .style("stroke-width", "1px")
+                                              .attr("r", 6)
+                                  })
+                                  .on('mousemove', function() {
+                                      d3.select('#tooltip')
+                                          .style('left', (d3.event.pageX+10) + 'px')
+                                          .style('top', (d3.event.pageY+10) + 'px')
+                                  });
+
+
+
+
+
+                        //}
+
+                        // colorscale - red / bad
+                        svgColor.selectAll("#colorScale")
+                                .data(badColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 0)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", badColor)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("Bad")
+                                .attr("x", -10)
+                                .attr("y", -10);
+
+                            // colorscale - grey / medicin
+                            svgColor.selectAll()
+                                .data(medicineColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 45)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", medicineColor)
+                            svgColor.append('text')
+                                .text("Medicine")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 25)
+                                .attr("y", -10)
+
+
+                            // colorscale - green / good
+                            svgColor.selectAll()
+                                .data(goodColor)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", 93)
+                                .attr("cy", -30)
+                                .attr("r", 5)
+                                //.attr("width", width/24 )
+                                //.attr("height", height/60 )
+                                .style("fill", goodColor)
+                            svgColor.append('text')
+                                .text("Good")
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .attr("x", 80)
+                                .attr("y", -10) 
+                                
+
+                      
+                    //}
+                  //}
+
+              }
+          });
+      }
+
+     // document.getElementById("weekId").innerHTML = document.getElementById("week6").innerHTML;
+    
+
+      // d3.select("body")
+      //     .append("div")
+      //     .attr("id", "data")
+
+      // SPLITTING THE WEEK - the text printet out
+      // d3.select("body")
+      //     .append("div")
+      //     .attr("id", "data2")
+
+
+      
+    // FUNCTIONS
+
+
+    // parse date as ISO UTC string and convert into Date object
+    function utc2date(iso) {
+        return new Date(Date.UTC(
+            Number(iso.substring(0,4)),    // year
+            Number(iso.substring(4,6))-1,  // month
+            Number(iso.substring(6,8)),    // day
+            Number(iso.substring(9,11)),   // hour
+            Number(iso.substring(11,13)),  // minutes
+            Number(iso.substring(13,15)),  // seconds
+            (iso.length > 16) ? Number(iso.substring(16,iso.length-1)) : 0 // milliseconds (if available)
+        ));
+    }
+
+    // prepend number n with zeros up to d digits
+    function prependZero(n, d) {
+        return ('0'.repeat(d-1) + Number(n)).slice(-d);
+    }
+
+    // parse the data from the CSV file
+    // column 0 = utcdata
+    // column 1 = delta (not used)
+    // column 2 = duration
+    function parseData(d, i) {
+        let utctime = d[0];
+        let duration = d[2];
+        let local = utc2date(utctime);
+        return {
+            utctime: utctime,
+            duration: Number(duration),
+            localtime: local,
+            //dateString: String(local.getFullYear())+String(local.getMonth()+1)+String(local.getDate()),
+            //timeString: String(local.getHours())+String(local.getMinutes())+String(local.getSeconds())+"."+String(local.getMilliseconds()),
+            dateString: `${local.getFullYear()}${prependZero(local.getMonth()+1,2)}${prependZero(local.getDate(),2)}`,
+            timeString: `${prependZero(local.getHours(),2)}${prependZero(local.getMinutes(),2)}${prependZero(local.getSeconds(),2)}.${prependZero(local.getMilliseconds(),3)}`,
+            tzOffset: -local.getTimezoneOffset(),
+            weekday: local.getDay(),
+            hour: local.getHours(),
+            week: getNumberOfWeek(local),
+            value: 1
+        };
+    }
+
+    function getNumberOfWeek(ddd) {
+
+        // var tdt = new Date(dt.valueOf());
+        // var dayn = (dt.getDay() + 6) % 7;
+        // tdt.setDate(tdt.getDate() - dayn + 3);
+        // var firstThursday = tdt.valueOf();
+        // tdt.setMonth(0, 1);
+        // if (tdt.getDay() !== 4) 
+        //   {
+        //   tdt.setMonth(0, 1 + ((4 - tdt.getDay()) + 7) % 7);
+        //     }
+        // return 1 + Math.ceil((firstThursday - tdt) / 604800000);
+
+        var date = new Date(ddd.getTime());
+        date.setHours(0, 0, 0, 0);
+        // Thursday in current week decides the year.
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        // January 4 is always in week 1.
+        var week1 = new Date(date.getFullYear(), 0, 4);
+        // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+      
+        // // Copy date so don't modify original
+        // d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        // // Set to nearest Thursday: current date + 4 - current day number
+        // // Make Sunday's day number 7
+        // d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        // // Get first day of year
+        // var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        // // Calculate full weeks to nearest Thursday
+        // return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); // 86400000 = 1 day
+
+
+        // const firstDayOfYear = new Date(dLocal.getFullYear(), 0, 1);
+        // const pastDaysOfYear = (dLocal - firstDayOfYear) / 86400000; // 86400000 = 1 day
+        // return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    }
+
+    function print(doc) {
+        var objFra = document.createElement('iframe');   // Create an IFrame.
+        objFra.style.visibility = "hidden";    // Hide the frame.
+        objFra.src = doc;                      // Set source.
+        document.body.appendChild(objFra);  // Add the frame to the web page.
+        objFra.contentWindow.focus();       // Set focus.
+        objFra.contentWindow.print();      // Print it.
+    }
+
+
+
+
+
+    </script>
+
+    <!-- <script src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js">
+    
+    var doc = new jsPDF();
+    var specialElementHandlers = {
+        '#editor': function (element, renderer) {
+            return true;
+        }
+    };
+
+    $('#cmd').click(function () {
+        doc.fromHTML($('#bodyID').html(), 15, 15, {
+            'width': 170,
+                'elementHandlers': specialElementHandlers
+        });
+        doc.save('sample-file.pdf');
+    });
+    
+    </script> -->
+
+
+
+
+
+</body>
+</html>
