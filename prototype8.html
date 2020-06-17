@@ -641,13 +641,13 @@
                                           .style('top', (d3.event.pageY+10) + 'px')
                                   });
 
-                                                                    // colorscale - red / bad
+                        // colorscale - red / bad
                         svgColor.selectAll("#colorScale")
                                 .data(badColor)
                                 .enter()
                                 .append("circle")
                                 .attr("cx", 0)
-                                .attr("cy", -30)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -657,15 +657,21 @@
                                 .style("font-size", "10")
                                 .text("Bad")
                                 .attr("x", -10)
-                                .attr("y", -10);
+                                .attr("y", -15);
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("1 press")
+                                .attr("x", -17)
+                                .attr("y", -2);
 
                             // colorscale - grey / medicin
                             svgColor.selectAll()
                                 .data(medicineColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 45)
-                                .attr("cy", -30)
+                                .attr("cx", 55)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -674,8 +680,14 @@
                                 .text("Medicine")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 25)
-                                .attr("y", -10)
+                                .attr("x", 35)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("3 press")
+                                .attr("x", 37)
+                                .attr("y", -2);
 
 
                             // colorscale - green / good
@@ -683,8 +695,8 @@
                                 .data(goodColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 93)
-                                .attr("cy", -30)
+                                .attr("cx", 108)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -693,8 +705,16 @@
                                 .text("Good")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 80)
-                                .attr("y", -10) 
+                                .attr("x", 95)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("2 press")
+                                .attr("x", 93)
+                                .attr("y", -2); 
+                                
+
 
                 svgColor.selectAll("#nextButton")
                 
@@ -1014,13 +1034,13 @@
                                           .style('top', (d3.event.pageY+10) + 'px')
                                   });
 
-                                  // colorscale - red / bad
+                        // colorscale - red / bad
                         svgColor.selectAll("#colorScale")
                                 .data(badColor)
                                 .enter()
                                 .append("circle")
                                 .attr("cx", 0)
-                                .attr("cy", -30)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1030,15 +1050,21 @@
                                 .style("font-size", "10")
                                 .text("Bad")
                                 .attr("x", -10)
-                                .attr("y", -10);
+                                .attr("y", -15);
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("1 press")
+                                .attr("x", -17)
+                                .attr("y", -2);
 
                             // colorscale - grey / medicin
                             svgColor.selectAll()
                                 .data(medicineColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 45)
-                                .attr("cy", -30)
+                                .attr("cx", 55)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1047,8 +1073,14 @@
                                 .text("Medicine")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 25)
-                                .attr("y", -10)
+                                .attr("x", 35)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("3 press")
+                                .attr("x", 37)
+                                .attr("y", -2);
 
 
                             // colorscale - green / good
@@ -1056,8 +1088,8 @@
                                 .data(goodColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 93)
-                                .attr("cy", -30)
+                                .attr("cx", 108)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1066,8 +1098,15 @@
                                 .text("Good")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 80)
-                                .attr("y", -10) 
+                                .attr("x", 95)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("2 press")
+                                .attr("x", 93)
+                                .attr("y", -2); 
+                                
 
                 svgColor.selectAll("#nextButton")
                 svgColor.append("rect")
@@ -1592,7 +1631,7 @@
                                 .enter()
                                 .append("circle")
                                 .attr("cx", 0)
-                                .attr("cy", -30)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1602,15 +1641,21 @@
                                 .style("font-size", "10")
                                 .text("Bad")
                                 .attr("x", -10)
-                                .attr("y", -10);
+                                .attr("y", -15);
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("1 press")
+                                .attr("x", -17)
+                                .attr("y", -2);
 
                             // colorscale - grey / medicin
                             svgColor.selectAll()
                                 .data(medicineColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 45)
-                                .attr("cy", -30)
+                                .attr("cx", 55)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1619,8 +1664,14 @@
                                 .text("Medicine")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 25)
-                                .attr("y", -10)
+                                .attr("x", 35)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("3 press")
+                                .attr("x", 37)
+                                .attr("y", -2);
 
 
                             // colorscale - green / good
@@ -1628,8 +1679,8 @@
                                 .data(goodColor)
                                 .enter()
                                 .append("circle")
-                                .attr("cx", 93)
-                                .attr("cy", -30)
+                                .attr("cx", 108)
+                                .attr("cy", -35)
                                 .attr("r", 5)
                                 //.attr("width", width/24 )
                                 //.attr("height", height/60 )
@@ -1638,8 +1689,14 @@
                                 .text("Good")
                                 .attr("font-family", "sans-serif")
                                 .style("font-size", "10")
-                                .attr("x", 80)
-                                .attr("y", -10) 
+                                .attr("x", 95)
+                                .attr("y", -15)
+                            svgColor.append('text')
+                                .attr("font-family", "sans-serif")
+                                .style("font-size", "10")
+                                .text("2 press")
+                                .attr("x", 93)
+                                .attr("y", -2); 
                                 
 
                       
