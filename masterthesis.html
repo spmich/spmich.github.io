@@ -198,6 +198,8 @@
         var gridData2 = gridData2();	
         // quick debugging
         console.log(gridData2);
+        // Create the tooltip
+        d3.select('body').append('div').attr('id', 'tooltip').attr('style', 'position: absolute; opacity: 0;');
 
         /// ----------------------------------------- ///
         //       append GRID - row and column
